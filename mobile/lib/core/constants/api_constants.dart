@@ -23,6 +23,7 @@ class OwnlyRoutes {
   static const subscription = '/subscription';
   static const notifications = '/notifications';
   static const dataExport = '/export';
+  static const households = '/households';
 
   static String productPath(String id) => '/products/$id';
 }

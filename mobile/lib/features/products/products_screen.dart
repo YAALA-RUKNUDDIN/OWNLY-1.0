@@ -69,8 +69,32 @@ class _ProductsScreenState extends ConsumerState<ProductsScreen> {
                   padding: const EdgeInsets.only(right: 8),
                   child: FilterChip(
                     label: const Text('All'),
-                    selected: filter.warrantyStatus.isEmpty,
-                    onSelected: (_) => _applyFilter(filter.copyWith(warrantyStatus: '')),
+                    selected: filter.warrantyStatus.isEmpty && filter.scope.isEmpty,
+                    onSelected: (_) => _applyFilter(filter.copyWith(warrantyStatus: '', scope: '')),
+                    selectedColor: OwnlyTheme.seed.withValues(alpha: 0.15),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: FilterChip(
+                    avatar: const Icon(Icons.home_outlined, size: 14),
+                    label: const Text('Household'),
+                    selected: filter.scope == 'household',
+                    onSelected: (_) => _applyFilter(
+                      filter.copyWith(scope: filter.scope == 'household' ? '' : 'household'),
+                    ),
+                    selectedColor: OwnlyTheme.seed.withValues(alpha: 0.15),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: FilterChip(
+                    avatar: const Icon(Icons.lock_outline, size: 14),
+                    label: const Text('Personal'),
+                    selected: filter.scope == 'personal',
+                    onSelected: (_) => _applyFilter(
+                      filter.copyWith(scope: filter.scope == 'personal' ? '' : 'personal'),
+                    ),
                     selectedColor: OwnlyTheme.seed.withValues(alpha: 0.15),
                   ),
                 ),
@@ -79,7 +103,11 @@ class _ProductsScreenState extends ConsumerState<ProductsScreen> {
                   child: FilterChip(
                     label: const Text('Expiring'),
                     selected: filter.warrantyStatus == 'expiring',
-                    onSelected: (_) => _applyFilter(filter.copyWith(warrantyStatus: 'expiring')),
+                    onSelected: (_) => _applyFilter(
+                      filter.copyWith(
+                        warrantyStatus: filter.warrantyStatus == 'expiring' ? '' : 'expiring',
+                      ),
+                    ),
                     selectedColor: OwnlyTheme.warning.withValues(alpha: 0.2),
                   ),
                 ),
@@ -138,8 +166,21 @@ class _ProductCard extends StatelessWidget {
           backgroundColor: OwnlyTheme.seed.withValues(alpha: 0.1),
           child: Icon(categoryIcon(product.category), color: OwnlyTheme.seed, size: 20),
         ),
-        title: Text(product.name,
-            style: const TextStyle(fontWeight: FontWeight.w600)),
+        title: Row(
+          children: [
+            Expanded(
+              child: Text(
+                product.name,
+                style: const TextStyle(fontWeight: FontWeight.w600),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            if (product.isShared) ...[
+              const SizedBox(width: 6),
+              const Icon(Icons.folder_shared, size: 16, color: OwnlyTheme.seed),
+            ],
+          ],
+        ),
         subtitle: Text(
           'Purchased ${Formatters.shortDate(product.purchaseDate)}'
           '${product.purchasePrice != null ? ' · ${Formatters.money(product.purchasePrice, product.currency)}' : ''}',

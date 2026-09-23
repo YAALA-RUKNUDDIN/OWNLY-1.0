@@ -8,6 +8,7 @@ import 'package:ownly/features/authentication/auth_controller.dart';
 import 'package:ownly/features/authentication/login_screen.dart';
 import 'package:ownly/features/authentication/onboarding_screen.dart';
 import 'package:ownly/features/dashboard/today_screen.dart';
+import 'package:ownly/features/households/household_screen.dart';
 import 'package:ownly/features/notifications/notification_history_screen.dart';
 import 'package:ownly/features/products/add_product_screen.dart';
 import 'package:ownly/features/products/product_detail_screen.dart';
@@ -111,6 +112,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: OwnlyRoutes.dataExport,
         builder: (context, state) => const DataExportScreen(),
+      ),
+      GoRoute(
+        path: OwnlyRoutes.households,
+        builder: (context, state) => const HouseholdScreen(),
       ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, shell) => HomeShell(shell: shell),

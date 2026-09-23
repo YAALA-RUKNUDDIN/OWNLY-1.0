@@ -29,6 +29,12 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
       appBar: AppBar(
         title: Text(p?.name ?? 'Product'),
         actions: [
+          if (p != null)
+            IconButton(
+              icon: Icon(p.isShared ? Icons.folder_shared : Icons.share_outlined),
+              tooltip: p.isShared ? 'Shared with household' : 'Share with household',
+              onPressed: () => _showShareDialog(context, p),
+            ),
           IconButton(
             icon: const Icon(Icons.delete_outline),
             tooltip: 'Delete product',
@@ -69,7 +75,25 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                                     Text(p.brand!,
                                         style: const TextStyle(color: OwnlyTheme.muted)),
                                   const SizedBox(height: 6),
-                                  _WarrantyBadge(warranty: p.warranty),
+                                  Wrap(
+                                    spacing: 8,
+                                    crossAxisAlignment: WrapCrossAlignment.center,
+                                    children: [
+                                      _WarrantyBadge(warranty: p.warranty),
+                                      if (p.isShared)
+                                        Chip(
+                                          avatar: const Icon(Icons.folder_shared, size: 14, color: OwnlyTheme.seed),
+                                          label: const Text('Shared',
+                                              style: TextStyle(
+                                                  fontSize: 11,
+                                                  color: OwnlyTheme.seed,
+                                                  fontWeight: FontWeight.bold)),
+                                          backgroundColor: OwnlyTheme.seed.withValues(alpha: 0.1),
+                                          side: BorderSide(color: OwnlyTheme.seed.withValues(alpha: 0.3)),
+                                          padding: EdgeInsets.zero,
+                                        ),
+                                    ],
+                                  ),
                                 ],
                               ),
                             ),
@@ -120,6 +144,91 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
     if (confirmed == true && mounted) {
       await ref.read(productDetailProvider(widget.productId).notifier).deleteProduct();
       if (context.mounted) Navigator.of(context).pop(true);
+    }
+  }
+
+  Future<void> _showShareDialog(BuildContext context, Product product) async {
+    try {
+      final repo = ref.read(householdRepositoryProvider);
+      final households = await repo.listHouseholds();
+      if (!context.mounted) return;
+      if (households.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'No households found. Create a household first in Profile > Household & family sharing.',
+            ),
+          ),
+        );
+        return;
+      }
+
+      final selectedHouseholdId = await showDialog<String?>(
+        context: context,
+        builder: (ctx) => SimpleDialog(
+          title: const Text('Share with Household Vault'),
+          children: [
+            SimpleDialogOption(
+              onPressed: () => Navigator.pop(ctx, 'personal'),
+              child: const Row(
+                children: [
+                  Icon(Icons.lock_outline, color: OwnlyTheme.muted),
+                  SizedBox(width: 12),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Personal Vault', style: TextStyle(fontWeight: FontWeight.w600)),
+                      Text('Only visible to you', style: TextStyle(color: OwnlyTheme.muted, fontSize: 12)),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const Divider(),
+            for (final h in households)
+              SimpleDialogOption(
+                onPressed: () => Navigator.pop(ctx, h.id),
+                child: Row(
+                  children: [
+                    const Icon(Icons.home_outlined, color: OwnlyTheme.seed),
+                    const SizedBox(width: 12),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(h.name, style: const TextStyle(fontWeight: FontWeight.w600)),
+                        Text('${h.memberCount} members · ${h.role}',
+                            style: const TextStyle(color: OwnlyTheme.muted, fontSize: 12)),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        ),
+      );
+
+      if (selectedHouseholdId != null) {
+        final targetHousehold = selectedHouseholdId == 'personal' ? null : selectedHouseholdId;
+        await repo.shareProduct(product.id, targetHousehold);
+        ref.read(productDetailProvider(widget.productId).notifier).load();
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                targetHousehold == null
+                    ? 'Product moved to personal vault.'
+                    : 'Product shared with household!',
+              ),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Sharing failed: $e')),
+        );
+      }
     }
   }
 }

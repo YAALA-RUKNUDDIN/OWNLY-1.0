@@ -105,6 +105,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           Card(
             child: Column(children: [
               ListTile(
+                leading: const Icon(Icons.people_outline, color: OwnlyTheme.seed),
+                title: const Text('Household & family sharing'),
+                subtitle: const Text('Shared vaults, roles & member invites'),
+                onTap: () => context.push(OwnlyRoutes.households),
+              ),
+              ListTile(
                 leading: const Icon(Icons.workspace_premium_outlined,
                     color: OwnlyTheme.seed),
                 title: const Text('Subscription'),
