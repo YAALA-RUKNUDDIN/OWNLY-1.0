@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import 'package:ownly/core/constants/api_constants.dart';
+import 'package:ownly/core/notifications/notification_payload.dart';
+import 'package:ownly/core/notifications/notification_service.dart';
 import 'package:ownly/core/theme/ownly_theme.dart';
 import 'package:ownly/core/utils/formatters.dart';
 import 'package:ownly/data/models.dart';
@@ -84,7 +88,51 @@ class _NotificationHistoryScreenState
     _fetch();
   }
 
+  Future<void> _sendTestNotification() async {
+    try {
+      final notifs = ref.read(notificationServiceProvider);
+      // Trigger via local notification service for instant verification
+      await notifs.showNotification(
+        title: 'OWNLY Test Alert',
+        body: 'Tap to view your reminders and upcoming items.',
+        payload: const NotificationPayload(
+          route: OwnlyRoutes.reminders,
+          title: 'OWNLY Test Alert',
+        ),
+      );
+      // Also request backend test notification if available
+      try {
+        await ref.read(repositoryProvider).sendTestNotification(
+              title: 'OWNLY Test Alert',
+              body: 'Tap to view your reminders and upcoming items.',
+              route: OwnlyRoutes.reminders,
+            );
+        _page = 1;
+        _fetch();
+      } catch (_) {}
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('Test notification dispatched! Check your notifications.')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not send test notification: $e')),
+      );
+    }
+  }
+
   String _categoryLabel(String category) => _categories[category] ?? category;
+
+  void _onItemTapped(NotificationItem item) {
+    if (item.subjectType == 'reminder') {
+      context.push(OwnlyRoutes.reminders);
+    } else if (item.subjectType == 'warranty' || item.subjectType == 'product' || item.subjectType == 'return') {
+      context.push(OwnlyRoutes.productPath(item.subjectId));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -93,6 +141,11 @@ class _NotificationHistoryScreenState
       appBar: AppBar(
         title: const Text('Notification history'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.notification_add_outlined),
+            tooltip: 'Send test notification',
+            onPressed: _sendTestNotification,
+          ),
           PopupMenuButton<String?>(
             icon: const Icon(Icons.filter_alt_outlined),
             tooltip: 'Filter by category',
@@ -148,26 +201,38 @@ class _NotificationHistoryScreenState
                           ),
                         for (final item in _items)
                           Card(
-                            child: Padding(
-                              padding: const EdgeInsets.all(14),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(item.title,
-                                      style: const TextStyle(
-                                          fontWeight: FontWeight.w700)),
-                                  const SizedBox(height: 4),
-                                  Text(item.body,
-                                      style: const TextStyle(
-                                          color: OwnlyTheme.muted)),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    '${_categoryLabel(item.category)} · '
-                                    '${item.sentAt == null ? '—' : Formatters.shortDate(item.sentAt!)} · '
-                                    '${item.deliveryStatus}',
-                                    style: const TextStyle(fontSize: 12),
-                                  ),
-                                ],
+                            clipBehavior: Clip.antiAlias,
+                            child: InkWell(
+                              onTap: () => _onItemTapped(item),
+                              child: Padding(
+                                padding: const EdgeInsets.all(14),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Expanded(
+                                          child: Text(item.title,
+                                              style: const TextStyle(
+                                                  fontWeight: FontWeight.w700)),
+                                        ),
+                                        const Icon(Icons.chevron_right,
+                                            size: 18, color: OwnlyTheme.muted),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(item.body,
+                                        style: const TextStyle(
+                                            color: OwnlyTheme.muted)),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      '${_categoryLabel(item.category)} · '
+                                      '${item.sentAt == null ? '—' : Formatters.shortDate(item.sentAt!)} · '
+                                      '${item.deliveryStatus}',
+                                      style: const TextStyle(fontSize: 12),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
                           ),

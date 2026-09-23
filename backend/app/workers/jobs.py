@@ -48,7 +48,7 @@ def _user_prefs(db, user_id) -> dict:
 
 
 def _notify(db, user_id, subject_type, subject_id, milestone, due_date,
-            category, title, body) -> bool:
+            category, title, body, data: dict | None = None) -> bool:
     """Idempotent notify: unique-guard in DB, then push. Returns True if sent."""
     exists = db.scalar(
         select(NotificationLog.id).where(
@@ -75,8 +75,11 @@ def _notify(db, user_id, subject_type, subject_id, milestone, due_date,
             select(DeviceToken.fcm_token).where(DeviceToken.user_id == user_id)
         ).fetchall()
     ]
+    payload = {"subject_id": str(subject_id), "subject_type": str(subject_type)}
+    if data:
+        payload.update(data)
     try:
-        invalid = get_push().send(tokens, title, body, {"subject_id": str(subject_id)})
+        invalid = get_push().send(tokens, title, body, payload)
         if invalid:
             db.execute(delete(DeviceToken).where(DeviceToken.fcm_token.in_(invalid)))
     except Exception as e:
@@ -119,7 +122,12 @@ def run_daily_scan() -> dict:
                     msg = MILESTONE_MESSAGES.get(days, f"Your {p.name} warranty expires in {days} days.")
                     if _notify(db, p.user_id, "warranty", w.id, f"{days}d", end,
                                NotificationCategory.warranty,
-                               f"{p.name} warranty", msg.format(name=p.name)):
+                               f"{p.name} warranty", msg.format(name=p.name),
+                               data={
+                                   "product_id": str(p.id),
+                                   "route": f"/products/{p.id}",
+                                   "deep_link": f"ownly:///products/{p.id}",
+                               }):
                         stats["warranty"] += 1
 
             # --- Return window ---
@@ -133,7 +141,12 @@ def run_daily_scan() -> dict:
                            else f"Your return window for {p.name} closes in {days} day(s).")
                     if _notify(db, p.user_id, "return", p.id, f"{days}d", r_end,
                                NotificationCategory.return_window,
-                               f"{p.name} return window", msg):
+                               f"{p.name} return window", msg,
+                               data={
+                                   "product_id": str(p.id),
+                                   "route": f"/products/{p.id}",
+                                   "deep_link": f"ownly:///products/{p.id}",
+                               }):
                         stats["return"] += 1
 
         # --- Due reminders (service due, custom, etc.) ---
@@ -151,8 +164,15 @@ def run_daily_scan() -> dict:
             rpref = prefs_for(db, r.user_id).get(cat, {"enabled": True, "lead_days": [0]})
             if not rpref["enabled"]:
                 continue
+            rem_route = f"/products/{r.product_id}" if r.product_id else "/reminders"
+            rem_deep = f"ownly:///products/{r.product_id}" if r.product_id else "ownly:///reminders"
             if _notify(db, r.user_id, "reminder", r.id, "due", r.scheduled_date,
-                       NotificationCategory(cat), r.title, r.description or r.title):
+                       NotificationCategory(cat), r.title, r.description or r.title,
+                       data={
+                           "product_id": str(r.product_id) if r.product_id else "",
+                           "route": rem_route,
+                           "deep_link": rem_deep,
+                       }):
                 stats["reminder"] += 1
                 r.notified_at = utc_now()
                 db.add(r)

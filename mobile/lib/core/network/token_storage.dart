@@ -25,6 +25,20 @@ class TokenStorage {
     await _storage.delete(key: _accessKey);
     await _storage.delete(key: _refreshKey);
   }
+
+  // ── Device token (Phase 5) ───────────────────────────────────
+  static const _deviceTokenKey = 'ownly_device_token';
+
+  Future<String> getOrCreateDeviceToken() async {
+    final existing = await _storage.read(key: _deviceTokenKey);
+    if (existing != null && existing.isNotEmpty) {
+      return existing;
+    }
+    final newToken =
+        'dev_token_${DateTime.now().millisecondsSinceEpoch}_${(1000 + (DateTime.now().microsecond % 9000))}';
+    await _storage.write(key: _deviceTokenKey, value: newToken);
+    return newToken;
+  }
 }
 
 final tokenStorageProvider = Provider<TokenStorage>(

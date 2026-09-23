@@ -81,10 +81,33 @@ def register_device(
 ):
     existing = db.scalar(select(DeviceToken).where(DeviceToken.fcm_token == body.fcm_token))
     if existing:
+        if existing.user_id != user.id:
+            existing.user_id = user.id
+            existing.platform = body.platform
+            db.commit()
+            return {"message": "Device re-assigned."}
         return {"message": "Device already registered."}
     db.add(DeviceToken(user_id=user.id, fcm_token=body.fcm_token, platform=body.platform))
     db.commit()
     return {"message": "Device registered."}
+
+
+@router.delete("/me/devices/{fcm_token}", status_code=204)
+def unregister_device(
+    fcm_token: str,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    token_obj = db.scalar(
+        select(DeviceToken).where(
+            DeviceToken.fcm_token == fcm_token,
+            DeviceToken.user_id == user.id,
+        )
+    )
+    if token_obj:
+        db.delete(token_obj)
+        db.commit()
+    return None
 
 
 @router.get("/me/export")

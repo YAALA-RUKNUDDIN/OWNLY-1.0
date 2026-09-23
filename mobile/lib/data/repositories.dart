@@ -330,6 +330,45 @@ class OwnlyRepository {
       throw ApiClient.toError(e);
     }
   }
+
+  // ── Push / Device Tokens (Phase 5) ──────────────────────────────────────
+  Future<void> registerDevice(String fcmToken, {String platform = 'unknown'}) async {
+    try {
+      await api.dio.post('/users/me/devices', data: {
+        'fcm_token': fcmToken,
+        'platform': platform,
+      });
+    } on DioException catch (e) {
+      throw ApiClient.toError(e);
+    }
+  }
+
+  Future<void> unregisterDevice(String fcmToken) async {
+    try {
+      await api.dio.delete('/users/me/devices/$fcmToken');
+    } catch (_) {
+      // Best effort cleanup on logout/rotation
+    }
+  }
+
+  Future<Map<String, dynamic>> sendTestNotification({
+    String title = 'OWNLY Test Alert',
+    String body = 'This is a test notification from OWNLY.',
+    String route = '/today',
+    String? deepLink,
+  }) async {
+    try {
+      final resp = await api.dio.post('/notifications/test', data: {
+        'title': title,
+        'body': body,
+        'route': route,
+        if (deepLink != null) 'deep_link': deepLink,
+      });
+      return resp.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ApiClient.toError(e);
+    }
+  }
 }
 
 final repositoryProvider = Provider<OwnlyRepository>(

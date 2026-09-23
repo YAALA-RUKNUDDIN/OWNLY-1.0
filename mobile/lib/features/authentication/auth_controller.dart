@@ -3,18 +3,21 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:ownly/core/network/api_client.dart';
+import 'package:ownly/core/notifications/notification_service.dart';
 import 'package:ownly/data/models.dart';
 import 'package:ownly/data/repositories.dart';
 
 class AuthController extends StateNotifier<AsyncValue<UserAccount?>> {
   final OwnlyRepository _repo;
+  final NotificationService? _notifs;
   StreamSubscription<SessionExpired>? _sub;
 
-  AuthController(this._repo, SessionEvents sessionEvents)
+  AuthController(this._repo, SessionEvents sessionEvents, [this._notifs])
       : super(const AsyncValue.loading()) {
     _restore();
     _sub = sessionEvents.stream.listen((_) async {
       // Access + refresh both dead → back to login.
+      await _notifs?.unregisterDeviceToken(_repo);
       await _repo.logout();
       state = const AsyncValue.data(null);
     });
@@ -23,7 +26,9 @@ class AuthController extends StateNotifier<AsyncValue<UserAccount?>> {
   Future<void> _restore() async {
     try {
       final resp = await _repo.api.dio.get('/auth/me');
-      state = AsyncValue.data(UserAccount.fromJson(resp.data as Map<String, dynamic>));
+      final user = UserAccount.fromJson(resp.data as Map<String, dynamic>);
+      state = AsyncValue.data(user);
+      unawaited(_notifs?.registerDeviceToken(_repo));
     } catch (_) {
       state = const AsyncValue.data(null);
     }
@@ -34,6 +39,7 @@ class AuthController extends StateNotifier<AsyncValue<UserAccount?>> {
     try {
       final user = await _repo.login(email, password);
       state = AsyncValue.data(user);
+      unawaited(_notifs?.registerDeviceToken(_repo));
     } on ApiException catch (e) {
       state = AsyncValue.error(e, StackTrace.current);
     } catch (e) {
@@ -46,6 +52,7 @@ class AuthController extends StateNotifier<AsyncValue<UserAccount?>> {
     try {
       final user = await _repo.register(name, email, password);
       state = AsyncValue.data(user);
+      unawaited(_notifs?.registerDeviceToken(_repo));
     } on ApiException catch (e) {
       state = AsyncValue.error(e, StackTrace.current);
     } catch (e) {
@@ -54,6 +61,7 @@ class AuthController extends StateNotifier<AsyncValue<UserAccount?>> {
   }
 
   Future<void> logout() async {
+    await _notifs?.unregisterDeviceToken(_repo);
     await _repo.logout();
     state = const AsyncValue.data(null);
   }
@@ -70,5 +78,6 @@ final authStateProvider = StateNotifierProvider<AuthController, AsyncValue<UserA
   (ref) => AuthController(
     ref.watch(repositoryProvider),
     ref.watch(sessionEventsProvider),
+    ref.watch(notificationServiceProvider),
   ),
 );

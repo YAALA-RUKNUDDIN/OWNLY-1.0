@@ -25,3 +25,18 @@ class NotificationListOut(BaseModel):
     total: int
     page: int
     page_size: int
+
+
+class TestNotificationRequest(BaseModel):
+    title: str = "OWNLY Test Alert"
+    body: str = "This is a test notification from OWNLY."
+    route: str = "/today"
+    deep_link: str | None = None
+
+
+class TestNotificationResponse(BaseModel):
+    message: str
+    recipient_count: int
+    tokens: list[str]
+    route: str
+    deep_link: str

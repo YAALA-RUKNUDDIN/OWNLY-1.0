@@ -111,6 +111,27 @@ class _FakeRepository extends OwnlyRepository {
         'documents': [1],
         'user': {'id': 'u1'},
       };
+
+  @override
+  Future<void> registerDevice(String fcmToken, {String platform = 'unknown'}) async {}
+
+  @override
+  Future<void> unregisterDevice(String fcmToken) async {}
+
+  @override
+  Future<Map<String, dynamic>> sendTestNotification({
+    String title = 'OWNLY Test Alert',
+    String body = 'This is a test notification from OWNLY.',
+    String route = '/today',
+    String? deepLink,
+  }) async =>
+      {
+        'message': 'Test notification dispatched.',
+        'recipient_count': 1,
+        'tokens': ['mock_token'],
+        'route': route,
+        'deep_link': deepLink ?? 'ownly://$route',
+      };
 }
 
 /// Real router + fake repository: exercises onboarding/auth gates end-to-end.

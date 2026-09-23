@@ -1,8 +1,9 @@
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:ownly/core/constants/api_constants.dart';
+import 'package:ownly/core/notifications/notification_service.dart';
 import 'package:ownly/features/authentication/auth_controller.dart';
 import 'package:ownly/features/authentication/login_screen.dart';
 import 'package:ownly/features/authentication/onboarding_screen.dart';
@@ -16,6 +17,9 @@ import 'package:ownly/features/profile/profile_screen.dart';
 import 'package:ownly/features/reminders/reminders_screen.dart';
 import 'package:ownly/features/shell/home_shell.dart';
 import 'package:ownly/features/subscription/subscription_screen.dart';
+
+/// Global navigator key for notification tap-through and dialogs outside BuildContext.
+final rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'root');
 
 /// Re-runs `GoRouter.redirect` whenever auth or onboarding state changes.
 /// Using `refreshListenable` (instead of `ref.watch` inside the provider)
@@ -42,6 +46,7 @@ class _GateRefresh extends ChangeNotifier {
 /// 3. Session (`/auth/me`) still restoring → hold, so signed-in users never
 ///    see a login flash and LoginScreen keeps its submitting state.
 /// 4. Logged out → `/login`; logged in while on `/login` → `/today`.
+/// 5. Cold-start notification launch → target deep-link route (Phase 5).
 ///
 /// Deep links use the `ownly://` scheme, e.g. `ownly:///products/<id>`
 /// (Android intent-filter / iOS URL types — notification taps in Phase 5
@@ -50,6 +55,7 @@ final routerProvider = Provider<GoRouter>((ref) {
   final refresh = _GateRefresh(ref);
 
   final router = GoRouter(
+    navigatorKey: rootNavigatorKey,
     initialLocation: OwnlyRoutes.today,
     refreshListenable: refresh,
     redirect: (context, state) {
@@ -73,6 +79,16 @@ final routerProvider = Provider<GoRouter>((ref) {
       final signedIn = auth.valueOrNull != null;
       if (!signedIn && !onLogin) return OwnlyRoutes.login;
       if (signedIn && onLogin) return OwnlyRoutes.today;
+
+      // Gate 3 — Cold-start notification launch dispatch (Phase 5).
+      if (signedIn && location == OwnlyRoutes.today) {
+        final launch =
+            ref.read(notificationServiceProvider).consumeLaunchPayload();
+        if (launch != null && launch.route != OwnlyRoutes.today) {
+          return launch.route;
+        }
+      }
+
       return null;
     },
     routes: [
@@ -142,6 +158,14 @@ final routerProvider = Provider<GoRouter>((ref) {
     ],
   );
 
+  final notifSub = ref.read(notificationServiceProvider).onNotificationTapped.listen((payload) {
+    final auth = ref.read(authStateProvider);
+    if (auth.valueOrNull != null) {
+      router.go(payload.route);
+    }
+  });
+
+  ref.onDispose(notifSub.cancel);
   ref.onDispose(router.dispose);
   ref.onDispose(refresh.dispose);
   return router;
