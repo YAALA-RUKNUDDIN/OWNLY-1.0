@@ -103,9 +103,10 @@ endpoint, `/today` alias, analytics event sink, Sentry wiring.
 | 5 | Push end-to-end: FCM registration, deep-link tap-through | ✅ done |
 | 6 | Full-stack Docker, security review, E2E journey suite, README, deployment readiness | ✅ done |
 | 7 | Production cloud integrations: AWS S3 / Cloudflare R2, Google Cloud Vision OCR, Firebase FCM | ✅ done |
+| 8 | Household & family sharing: RBAC (admin/member/viewer), shared vaults, invite codes, mobile screen | ✅ done |
 
 Every phase ends with: tests run → failures fixed → decision records → docs
-updated → git commit. (126 backend tests, 18 mobile tests passing, 0 analysis issues)
+updated → git commit. (132 backend tests, 24 mobile tests passing, 0 analysis issues)
 
 ## 6. Dependencies
 

@@ -14,6 +14,7 @@
 - **Receipt OCR Draft Pipeline:** Image receipt text extraction with pre-filled product draft generation. Extracted data is always presented as an editable draft—**nothing auto-saves without user consent**.
 - **Push Notifications & Deep Linking:** End-to-end device token registration (`POST /users/me/devices`), background worker scheduling, and notification tap-through routing directly to the target product or reminder (`ownly:///products/{id}`).
 - **Cross-Platform Flutter Mobile Client:** State-of-the-art mobile experience built with Flutter 3.x, Riverpod state management, GoRouter declarative navigation, offline-tolerant HTTP client with automatic token refreshing, and responsive design adhering to the slate/emerald design system.
+- **Household & Family Sharing:** Multi-user shared vaults with role-based access control (`admin`, `member`, `viewer`), time-bound invite code generation (`OWN-XXXX-XXXX`), and safe unlinking cascades that preserve personal product vaults.
 - **Honest Monetization:** Tiered subscription enforcement (Free tier capped at 10 items; Unlimited Premium) evaluated strictly server-side.
 - **Data Sovereignty & Privacy-First:** Full GDPR-grade data export (`GET /users/me/export`) and irreversible account deletion (`DELETE /users/me`) that cascades across all database records and storage files.
 
@@ -183,6 +184,16 @@ Base path: `/api/v1`. All endpoints return standard HTTP status codes and a unif
 | | `DELETE /users/me/devices/{token}` | Unregister device token |
 | **Notifications** | `POST /notifications/test` | Dispatch test push notification with deep-link metadata |
 | | `GET /notifications` | Paginated notification history with category filters |
+| **Households** | `GET /households` | List caller's households |
+| | `POST /households` | Create a new household vault |
+| | `GET /households/{id}` | Detailed household view with member list and roles |
+| | `PATCH /households/{id}` | Rename household (admin only) |
+| | `DELETE /households/{id}` | Delete household and safely unlink products (admin only) |
+| | `POST /households/{id}/invites` | Generate invite code with role & expiration (admin only) |
+| | `GET /households/{id}/invites` | List active invite codes (admin only) |
+| | `POST /households/join` | Join household via 12-char invite code |
+| | `DELETE /households/{id}/members/{user_id}` | Remove member (admin or self) |
+| | `POST /products/{id}/share` | Share product with household vault or revert to personal |
 | **Preferences** | `GET /users/me/prefs` | Get notification lead-time and category preferences |
 | | `PATCH /users/me/prefs` | Update notification preferences |
 | **Subscription** | `GET /subscription` | Current tier, usage count, and product limit |
@@ -199,6 +210,7 @@ Base path: `/api/v1`. All endpoints return standard HTTP status codes and a unif
 2. **Cryptographic Token Family Revocation:** Refresh tokens use single-use rotation. If an already-rotated token is presented (potential token theft), the entire refresh token family is invalidated immediately.
 3. **Signed Download URLs:** Documents are stored in private storage. Downloads are mediated by HMAC-SHA256 signatures with 10-minute expiry timestamps. Expired or tampered signatures are rejected with HTTP 401 Unauthorized.
 4. **Permanent Right to Erasure:** Deleting an account initiates a cascading purge: product records, warranties, reminders, notifications, and physical files from object storage are permanently deleted.
+5. **Safe RBAC & Cascade Unlinking:** Household vaults distinguish `admin`, `member`, and `viewer` roles. Deleting a household automatically resets `Product.household_id` to `NULL`, returning shared items to their owner's personal vault without data loss.
 
 ---
 
@@ -207,12 +219,17 @@ Base path: `/api/v1`. All endpoints return standard HTTP status codes and a unif
 ### Test Suite Execution
 
 #### Backend Pytest Suite
-Run the full test suite (126 tests covering auth, security, user isolation, warranty math, today urgency, push notifications, cloud integrations, and full end-to-end journey):
+Run the full test suite (132 tests covering auth, security, user isolation, warranty math, today urgency, push notifications, cloud integrations, household sharing & RBAC, and full end-to-end journey):
 
 ```bash
 cd backend
 # With virtual environment activated:
 pytest -v
+```
+
+#### Household Sharing & RBAC Suite
+```bash
+pytest tests/test_households.py -v
 ```
 
 #### End-to-End User Journey & Security Suite
@@ -255,7 +272,8 @@ python smoke_test.py http://localhost:8000/api/v1
 | **Document Vault** | Private storage + HMAC-signed expiring URLs | ✅ Complete | Path traversal & signature tampering verified in `test_e2e_journey.py` |
 | **OCR Pipeline** | Receipt extraction returning non-persisting draft | ✅ Complete | Verified in `test_e2e_journey.py` (saves nothing automatically) |
 | **Notifications** | Push dispatch + device lifecycle + deep linking | ✅ Complete | Verified in `test_push.py` and mobile `notification_test.dart` |
-| **Mobile App** | Riverpod + GoRouter + Responsive UI + Offline handling | ✅ Complete | 18 mobile tests green, 0 `flutter analyze` issues |
+| **Mobile App** | Riverpod + GoRouter + Responsive UI + Offline handling | ✅ Complete | 24 mobile tests green, 0 `flutter analyze` issues |
+| **Household Sharing** | Multi-user vaults, RBAC (admin/member/viewer), invite codes | ✅ Complete | 6 tests in `test_households.py`, 6 tests in `household_test.dart` |
 | **Containerization** | Docker Compose orchestration with healthchecks | ✅ Complete | Root `docker-compose.yml` validated with persistent volumes |
 | **Cloud Integrations** | AWS S3/R2, Google Vision OCR dual auth, FCM HTTP v1 | ✅ Complete | 18 integration tests passing in `test_cloud_integrations.py` |
-| **Documentation** | Production README + Architecture Decision Records | ✅ Complete | ADRs D-001 through D-012 recorded in `docs/decisions/` |
+| **Documentation** | Production README + Architecture Decision Records | ✅ Complete | ADRs D-001 through D-013 recorded in `docs/decisions/` |
