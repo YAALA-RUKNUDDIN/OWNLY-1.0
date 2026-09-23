@@ -28,6 +28,8 @@ mobile/.dart_tool/
 mobile/.flutter-plugins*
 mobile/.packages
 mobile/build/
+mobile/android/build/
+mobile/android/local.properties
 mobile/.idea/
 mobile/android/.gradle/
 mobile/ios/Pods/
