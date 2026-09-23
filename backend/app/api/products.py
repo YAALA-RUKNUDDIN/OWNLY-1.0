@@ -1,4 +1,4 @@
-"""Product CRUD, search, filters, pagination. All queries user-scoped."""
+"""Product CRUD, search, filters, pagination. All queries user-scoped and household-aware."""
 import uuid
 from datetime import datetime
 
@@ -8,11 +8,13 @@ from sqlalchemy.orm import Session
 from app.api.deps import PaginationParams, get_current_user
 from app.core.analytics_events import AnalyticsEvent
 from app.core.database import get_db
-from app.core.errors import NotFoundError, ValidationError
+from app.core.errors import ForbiddenError, NotFoundError, ValidationError
 from app.integrations.analytics import track
 from app.models import EventType, Product, ProductStatus, User
 from app.repositories.product_repo import ProductRepository
+from app.schemas.household import ProductShareRequest
 from app.schemas.product import ProductCreate, ProductListOut, ProductOut, ProductUpdate
+from app.services.household_service import HouseholdService
 from app.services.subscription_service import enforce_product_quota
 from app.services.timeline_service import record_event
 from app.services.warranty_service import compute_return_status, compute_warranty_status
@@ -22,6 +24,8 @@ router = APIRouter(prefix="/products", tags=["products"])
 
 def _serialize(db: Session, p: Product) -> dict:
     data = ProductOut.model_validate(p).model_dump(mode="json")
+    data["household_id"] = str(p.household_id) if p.household_id else None
+    data["is_shared"] = p.household_id is not None
     warranty = next(iter(p.warranties), None) if p.warranties else None
     if warranty:
         status, days = compute_warranty_status(warranty.end_date)
@@ -45,6 +49,8 @@ def list_products(
     status: str | None = None,
     warranty_status: str | None = Query(None, pattern="^(expiring|valid|expired|none)$"),
     purchase_year: int | None = Query(None, ge=1900, le=2100),
+    scope: str = Query("all", pattern="^(all|personal|household)$"),
+    household_id: uuid.UUID | None = None,
     pagination: PaginationParams = Depends(),
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
@@ -55,6 +61,7 @@ def list_products(
     products, total = repo.list(
         search=search, category=category, status=status,
         warranty_status=warranty_status, purchase_year=purchase_year,
+        scope=scope, household_id=household_id,
         page=pagination.page, page_size=pagination.page_size,
     )
     return {
@@ -111,9 +118,13 @@ def update_product(
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    product = ProductRepository(db, user.id).get(product_id)
+    repo = ProductRepository(db, user.id)
+    product = repo.get(product_id)
     if not product:
         raise NotFoundError("Product not found.")
+    if not repo.can_edit_product(product):
+        raise ForbiddenError("You have read-only access to this product.")
+
     changes = body.model_dump(exclude_unset=True, exclude_none=True)
     old_status = product.status
     for field, value in changes.items():
@@ -136,10 +147,26 @@ def delete_product(
     user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    product = ProductRepository(db, user.id).get(product_id)
+    repo = ProductRepository(db, user.id)
+    product = repo.get(product_id)
     if not product:
         raise NotFoundError("Product not found.")
-    ProductRepository(db, user.id).soft_delete(product)
+    if not repo.can_edit_product(product):
+        raise ForbiddenError("You have read-only access to this product.")
+
+    repo.soft_delete(product)
     db.commit()
     track(AnalyticsEvent.product_deleted, user.id)
     return None
+
+
+@router.post("/{product_id}/share", response_model=ProductOut)
+def share_product(
+    product_id: uuid.UUID,
+    body: ProductShareRequest,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    service = HouseholdService(db)
+    product = service.share_product(product_id, user.id, body.household_id)
+    return _serialize(db, product)
