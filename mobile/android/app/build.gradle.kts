@@ -6,7 +6,8 @@ plugins {
 
 android {
     namespace = "com.ownly.ownly"
-    compileSdk = flutter.compileSdkVersion
+    // Plugins may require up to API 36; never compile below that.
+    compileSdk = maxOf(flutter.compileSdkVersion, 36)
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
