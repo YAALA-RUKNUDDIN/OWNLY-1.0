@@ -188,7 +188,7 @@ class _AttentionCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: _severityColor.withOpacity(0.12),
+                color: _severityColor.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(_icon, color: _severityColor),
@@ -239,7 +239,7 @@ class _ProductTile extends StatelessWidget {
     return Card(
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor: OwnlyTheme.seed.withOpacity(0.1),
+          backgroundColor: OwnlyTheme.seed.withValues(alpha: 0.1),
           child: Icon(categoryIcon(product.category),
               color: OwnlyTheme.seed, size: 20),
         ),
@@ -254,7 +254,7 @@ class _ProductTile extends StatelessWidget {
               fontWeight: FontWeight.w600,
             ),
           ),
-          backgroundColor: statusColor(product.warranty.status).withOpacity(0.1),
+          backgroundColor: statusColor(product.warranty.status).withValues(alpha: 0.1),
           side: BorderSide.none,
         ),
       ),

@@ -185,7 +185,7 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
             ),
             const SizedBox(height: 14),
             DropdownButtonFormField<String>(
-              value: _category,
+              initialValue: _category,
               decoration: const InputDecoration(labelText: 'Category'),
               items: [
                 for (final c in categories)
@@ -228,7 +228,7 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
             ),
             const SizedBox(height: 14),
             DropdownButtonFormField<int>(
-              value: _returnDays,
+              initialValue: _returnDays,
               decoration: const InputDecoration(labelText: 'Return window'),
               items: const [
                 DropdownMenuItem(value: 0, child: Text('Not tracked')),
@@ -241,7 +241,7 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
             ),
             const SizedBox(height: 14),
             DropdownButtonFormField<int>(
-              value: _warrantyMonths,
+              initialValue: _warrantyMonths,
               decoration: const InputDecoration(labelText: 'Warranty duration'),
               items: const [
                 DropdownMenuItem(value: 6, child: Text('6 months')),

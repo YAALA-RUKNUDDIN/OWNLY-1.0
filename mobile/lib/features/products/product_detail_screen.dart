@@ -6,6 +6,7 @@ import 'package:ownly/core/constants/categories.dart';
 import 'package:ownly/core/theme/ownly_theme.dart';
 import 'package:ownly/core/utils/formatters.dart';
 import 'package:ownly/data/models.dart';
+import 'package:ownly/data/repositories.dart';
 import 'package:ownly/features/products/products_controller.dart';
 
 /// Product detail: overview, timeline, documents, warranty, repairs sections.
@@ -51,7 +52,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                           children: [
                             CircleAvatar(
                               radius: 30,
-                              backgroundColor: OwnlyTheme.seed.withOpacity(0.1),
+                              backgroundColor: OwnlyTheme.seed.withValues(alpha: 0.1),
                               child: Icon(categoryIcon(p!.category),
                                   color: OwnlyTheme.seed, size: 28),
                             ),
@@ -117,7 +118,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
     );
     if (confirmed == true && mounted) {
       await ref.read(productDetailProvider(widget.productId).notifier).deleteProduct();
-      if (mounted) Navigator.of(context).pop(true);
+      if (context.mounted) Navigator.of(context).pop(true);
     }
   }
 }
@@ -135,7 +136,7 @@ class _WarrantyBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.12),
+        color: color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Text(

@@ -8,3 +8,18 @@ class ApiConstants {
   static const Duration connectTimeout = Duration(seconds: 15);
   static const Duration receiveTimeout = Duration(seconds: 30);
 }
+
+/// App-wide route constants. Deep links use the `ownly://` scheme
+/// (see android/app/src/main/AndroidManifest.xml and ios/Runner/Info.plist).
+class OwnlyRoutes {
+  static const scheme = 'ownly';
+  static const today = '/today';
+  static const products = '/products';
+  static const addProduct = '/add';
+  static const reminders = '/reminders';
+  static const profile = '/profile';
+  static const login = '/login';
+  static const onboarding = '/onboarding';
+
+  static String productPath(String id) => '/products/$id';
+}

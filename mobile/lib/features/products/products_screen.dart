@@ -71,7 +71,7 @@ class _ProductsScreenState extends ConsumerState<ProductsScreen> {
                     label: const Text('All'),
                     selected: filter.warrantyStatus.isEmpty,
                     onSelected: (_) => _applyFilter(filter.copyWith(warrantyStatus: '')),
-                    selectedColor: OwnlyTheme.seed.withOpacity(0.15),
+                    selectedColor: OwnlyTheme.seed.withValues(alpha: 0.15),
                   ),
                 ),
                 Padding(
@@ -80,7 +80,7 @@ class _ProductsScreenState extends ConsumerState<ProductsScreen> {
                     label: const Text('Expiring'),
                     selected: filter.warrantyStatus == 'expiring',
                     onSelected: (_) => _applyFilter(filter.copyWith(warrantyStatus: 'expiring')),
-                    selectedColor: OwnlyTheme.warning.withOpacity(0.2),
+                    selectedColor: OwnlyTheme.warning.withValues(alpha: 0.2),
                   ),
                 ),
               ],
@@ -135,7 +135,7 @@ class _ProductCard extends StatelessWidget {
       child: ListTile(
         onTap: onTap,
         leading: CircleAvatar(
-          backgroundColor: OwnlyTheme.seed.withOpacity(0.1),
+          backgroundColor: OwnlyTheme.seed.withValues(alpha: 0.1),
           child: Icon(categoryIcon(product.category), color: OwnlyTheme.seed, size: 20),
         ),
         title: Text(product.name,

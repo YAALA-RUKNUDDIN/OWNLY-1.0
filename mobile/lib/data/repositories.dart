@@ -219,6 +219,37 @@ class OwnlyRepository {
   }
 
   // ── Account ─────────────────────────────────────────────────
+  // ── Notification preferences ────────────────────────────────
+  Future<List<NotificationPref>> notificationPrefs() async {
+    try {
+      final resp = await api.dio.get('/users/me/prefs');
+      return _parsePrefs(resp.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      throw ApiClient.toError(e);
+    }
+  }
+
+  Future<List<NotificationPref>> updateNotificationPref(
+    String category, {
+    required bool enabled,
+    required List<int> leadDays,
+  }) async {
+    try {
+      final resp = await api.dio.patch('/users/me/prefs', data: {
+        category: {'enabled': enabled, 'lead_days': leadDays},
+      });
+      return _parsePrefs(resp.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      throw ApiClient.toError(e);
+    }
+  }
+
+  static List<NotificationPref> _parsePrefs(Map<String, dynamic> body) =>
+      ((body['preferences'] ?? const <dynamic>[]) as List)
+          .cast<Map<String, dynamic>>()
+          .map(NotificationPref.fromJson)
+          .toList();
+
   Future<Map<String, dynamic>> exportData() async {
     try {
       final resp = await api.dio.get('/users/me/export');

@@ -76,7 +76,7 @@ class OwnlyTheme {
       ),
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: Colors.white,
-        indicatorColor: seed.withOpacity(0.10),
+        indicatorColor: seed.withValues(alpha: 0.10),
         labelTextStyle: WidgetStateProperty.all(
           const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: ink),
         ),

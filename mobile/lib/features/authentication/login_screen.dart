@@ -35,7 +35,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       _errorMessage = null;
     });
     final controller = ref.read(authStateProvider.notifier);
-    final result = _isRegister
+    _isRegister
         ? await controller.register(_name.text.trim(), _email.text.trim(), _password.text)
         : await controller.login(_email.text.trim(), _password.text);
     if (!mounted) return;

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:ownly/core/theme/ownly_theme.dart';
+import 'package:ownly/data/models.dart';
+import 'package:ownly/data/repositories.dart';
 import 'package:ownly/features/authentication/auth_controller.dart';
 
 /// Profile: notification preferences, data export, account deletion, logout.
@@ -15,6 +17,37 @@ class ProfileScreen extends ConsumerStatefulWidget {
 
 class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   bool _busy = false;
+  late Future<List<NotificationPref>> _prefs;
+
+  @override
+  void initState() {
+    super.initState();
+    _prefs = ref.read(repositoryProvider).notificationPrefs();
+  }
+
+  Future<void> _toggle(NotificationPref pref, bool enabled) async {
+    try {
+      final updated = await ref.read(repositoryProvider).updateNotificationPref(
+            pref.category,
+            enabled: enabled,
+            leadDays: pref.leadDays,
+          );
+      if (mounted) setState(() => _prefs = Future.value(updated));
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Could not save preference: $e')));
+      }
+    }
+  }
+
+  String _prefLabel(String category) => switch (category) {
+        'warranty' => 'Warranty alerts',
+        'return_window' => 'Return window alerts',
+        'service' => 'Service reminders',
+        'custom' => 'Custom reminders',
+        _ => category,
+      };
 
   Future<void> _export() async {
     setState(() => _busy = true);
@@ -88,26 +121,47 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           const SizedBox(height: 16),
           const _Header('Notifications'),
           Card(
-            child: Column(children: [
-              SwitchListTile(
-                title: const Text('Warranty alerts'),
-                subtitle: const Text('90 / 30 / 7 / 1 days before expiry'),
-                value: true,
-                onChanged: (_) {},
-              ),
-              SwitchListTile(
-                title: const Text('Return window alerts'),
-                subtitle: const Text('Final day reminders'),
-                value: true,
-                onChanged: (_) {},
-              ),
-              SwitchListTile(
-                title: const Text('Service reminders'),
-                subtitle: const Text('Scheduled maintenance'),
-                value: true,
-                onChanged: (_) {},
-              ),
-            ]),
+            child: FutureBuilder<List<NotificationPref>>(
+              future: _prefs,
+              builder: (context, snap) {
+                if (snap.connectionState == ConnectionState.waiting) {
+                  return const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 24),
+                    child: Center(child: CircularProgressIndicator()),
+                  );
+                }
+                if (snap.hasError) {
+                  return ListTile(
+                    leading:
+                        const Icon(Icons.cloud_off, color: OwnlyTheme.muted),
+                    title: const Text('Could not load preferences'),
+                    subtitle: const Text('Tap to retry'),
+                    onTap: () => setState(
+                        () => _prefs = ref.read(repositoryProvider).notificationPrefs()),
+                  );
+                }
+                final prefs = snap.data ?? const <NotificationPref>[];
+                if (prefs.isEmpty) {
+                  return const ListTile(
+                    title: Text('No notification preferences available.',
+                        style: TextStyle(color: OwnlyTheme.muted)),
+                  );
+                }
+                return Column(
+                  children: [
+                    for (final p in prefs)
+                      SwitchListTile(
+                        title: Text(_prefLabel(p.category)),
+                        subtitle: Text(p.leadDays.isEmpty
+                            ? 'On the day only'
+                            : '${p.leadDays.join(' / ')} days before'),
+                        value: p.enabled,
+                        onChanged: (v) => _toggle(p, v),
+                      ),
+                  ],
+                );
+              },
+            ),
           ),
           const SizedBox(height: 16),
           const _Header('Your data'),

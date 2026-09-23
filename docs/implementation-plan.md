@@ -98,7 +98,7 @@ endpoint, `/today` alias, analytics event sink, Sentry wiring.
 | 0 | Repo inspection, gap analysis, this plan | ✅ done |
 | 1 | Repair backend, tests green (64/64 on SQLite **and** PostgreSQL), Alembic baseline (round-trip verified on PG), docs, git | ✅ done |
 | 2 | Subscriptions/feature gating, notification history, analytics + Sentry abstractions | ✅ done |
-| 3 | Mobile foundation: platform scaffolding, GoRouter + deep links, onboarding | pending |
+| 3 | Mobile foundation: platform scaffolding, GoRouter + deep links, onboarding, notification prefs | ✅ done |
 | 4 | Mobile features: add-product (scan/upload/manual), OCR review, documents vault, detail/timeline | pending |
 | 5 | Push end-to-end: FCM registration, deep-link tap-through | pending |
 | 6 | Full-stack Docker, security review, E2E, README, deployment readiness | pending |

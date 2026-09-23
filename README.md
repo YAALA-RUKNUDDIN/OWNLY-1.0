@@ -134,8 +134,11 @@ Base path `/api/v1`. Uniform error envelope:
   round-trip `upgrade head → downgrade base → upgrade head`, and `alembic check`
   reports *no new upgrade operations* (migration exactly matches the ORM).
 - ✅ **Import audit**: every module under `app/` imports cleanly (SQLite mode).
-- ⚠ Flutter codebase requires the Flutter SDK (not installed on this machine) to
-  build/run — platform scaffolding is scheduled for Phase 3.
+- ✅ **Flutter 3.47.5 stable (`C:\flutter\flutter`)**: Phase 3 mobile foundation
+  verified with `flutter pub get` → `flutter analyze` (0 issues) →
+  `flutter test` (6/6 passing — dashboard render, login validation, onboarding
+  gate, session gate, formatter). Platform scaffolding, GoRouter + `ownly://`
+  deep links and onboarding are in place.
 - 🐳 Docker daemon was unavailable during this run; PostgreSQL-parity test runs
   (`TEST_DATABASE_URL=...`) should be executed when Docker is available.
 

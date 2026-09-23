@@ -200,6 +200,26 @@ class TodayDashboard {
       );
 }
 
+/// One row of GET /users/me/prefs — a user's per-category notification
+/// preference (warranty | return_window | service | custom).
+class NotificationPref {
+  final String category;
+  final bool enabled;
+  final List<int> leadDays;
+
+  NotificationPref({
+    required this.category,
+    required this.enabled,
+    required this.leadDays,
+  });
+
+  factory NotificationPref.fromJson(Map<String, dynamic> j) => NotificationPref(
+        category: j['category'] as String,
+        enabled: (j['enabled'] ?? true) as bool,
+        leadDays: ((j['lead_days'] ?? const <dynamic>[]) as List).cast<int>(),
+      );
+}
+
 class TimelineEvent {
   final String id;
   final String eventType;
