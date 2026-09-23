@@ -128,6 +128,18 @@ class OwnlyRepository {
     }
   }
 
+  Future<List<RepairEntry>> repairs(String productId) async {
+    try {
+      final resp = await api.dio.get('/products/$productId/repairs');
+      return (resp.data as List)
+          .cast<Map<String, dynamic>>()
+          .map(RepairEntry.fromJson)
+          .toList();
+    } on DioException catch (e) {
+      throw ApiClient.toError(e);
+    }
+  }
+
   Future<void> addServiceRecord(String productId, Map<String, dynamic> body) async {
     try {
       await api.dio.post('/products/$productId/service-records', data: body);
@@ -249,6 +261,57 @@ class OwnlyRepository {
           .cast<Map<String, dynamic>>()
           .map(NotificationPref.fromJson)
           .toList();
+
+  // ── Subscription ────────────────────────────────────────────────────────
+  Future<SubscriptionInfo> subscription() async {
+    try {
+      final resp = await api.dio.get('/subscription');
+      return SubscriptionInfo.fromJson(resp.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      throw ApiClient.toError(e);
+    }
+  }
+
+  /// Dev/manual activation — store-receipt verification replaces this (D-007).
+  Future<SubscriptionInfo> activateSubscription(
+      {int months = 12, String? providerRef}) async {
+    try {
+      final resp = await api.dio.post('/subscription/activate', data: {
+        'months': months,
+        if (providerRef != null) 'provider_ref': providerRef,
+      });
+      return SubscriptionInfo.fromJson(resp.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      throw ApiClient.toError(e);
+    }
+  }
+
+  Future<SubscriptionInfo> cancelSubscription() async {
+    try {
+      final resp = await api.dio.post('/subscription/cancel');
+      return SubscriptionInfo.fromJson(resp.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      throw ApiClient.toError(e);
+    }
+  }
+
+  // ── Notification history ────────────────────────────────────────────────
+  Future<NotificationPage> notifications({
+    String? category,
+    int page = 1,
+    int pageSize = 20,
+  }) async {
+    try {
+      final resp = await api.dio.get('/notifications', queryParameters: {
+        if (category != null && category.isNotEmpty) 'category': category,
+        'page': page,
+        'page_size': pageSize,
+      });
+      return NotificationPage.fromJson(resp.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      throw ApiClient.toError(e);
+    }
+  }
 
   Future<Map<String, dynamic>> exportData() async {
     try {

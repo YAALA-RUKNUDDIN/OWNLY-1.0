@@ -20,6 +20,9 @@ class OwnlyRoutes {
   static const profile = '/profile';
   static const login = '/login';
   static const onboarding = '/onboarding';
+  static const subscription = '/subscription';
+  static const notifications = '/notifications';
+  static const dataExport = '/export';
 
   static String productPath(String id) => '/products/$id';
 }

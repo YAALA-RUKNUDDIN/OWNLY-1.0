@@ -332,3 +332,143 @@ class OcrDraft {
         rawText: (j['raw_text'] ?? '') as String,
       );
 }
+
+/// GET /subscription — current plan, limits and usage.
+/// Drives feature gating and upgrade prompts app-wide.
+class SubscriptionInfo {
+  final String tier; // free | premium
+  final String status;
+  final String provider;
+  final DateTime? startedAt;
+  final DateTime? expiresAt;
+  final DateTime? canceledAt;
+  final int? maxProducts; // null = unlimited
+  final List<String> features;
+  final int usedProducts;
+
+  const SubscriptionInfo({
+    this.tier = 'free',
+    this.status = 'active',
+    this.provider = 'free',
+    this.startedAt,
+    this.expiresAt,
+    this.canceledAt,
+    this.maxProducts,
+    this.features = const [],
+    this.usedProducts = 0,
+  });
+
+  bool get isPremium => tier == 'premium';
+
+  factory SubscriptionInfo.fromJson(Map<String, dynamic> j) {
+    final limits = (j['limits'] ?? const <String, dynamic>{}) as Map<String, dynamic>;
+    final usage = (j['usage'] ?? const <String, dynamic>{}) as Map<String, dynamic>;
+    return SubscriptionInfo(
+      tier: (j['tier'] ?? 'free') as String,
+      status: (j['status'] ?? '') as String,
+      provider: (j['provider'] ?? '') as String,
+      startedAt: DateTime.tryParse('${j['started_at']}'),
+      expiresAt: DateTime.tryParse('${j['expires_at']}'),
+      canceledAt: DateTime.tryParse('${j['canceled_at']}'),
+      maxProducts: limits['max_products'] as int?,
+      features: ((limits['features'] ?? const <dynamic>[]) as List).cast<String>(),
+      usedProducts: (usage['products'] ?? 0) as int,
+    );
+  }
+}
+
+/// One row of GET /notifications — a logged notification (history entry).
+class NotificationItem {
+  final String id;
+  final String category; // warranty | return_window | service | custom
+  final String subjectType;
+  final String subjectId;
+  final String milestone;
+  final DateTime? dueDate;
+  final String title;
+  final String body;
+  final String deliveryStatus;
+  final DateTime? sentAt;
+
+  const NotificationItem({
+    required this.id,
+    required this.category,
+    required this.subjectType,
+    required this.subjectId,
+    required this.milestone,
+    this.dueDate,
+    required this.title,
+    required this.body,
+    required this.deliveryStatus,
+    this.sentAt,
+  });
+
+  factory NotificationItem.fromJson(Map<String, dynamic> j) => NotificationItem(
+        id: j['id'] as String,
+        category: (j['category'] ?? '') as String,
+        subjectType: (j['subject_type'] ?? '') as String,
+        subjectId: (j['subject_id'] ?? '') as String,
+        milestone: (j['milestone'] ?? '') as String,
+        dueDate: DateTime.tryParse('${j['due_date']}'),
+        title: (j['title'] ?? '') as String,
+        body: (j['body'] ?? '') as String,
+        deliveryStatus: (j['delivery_status'] ?? '') as String,
+        sentAt: DateTime.tryParse('${j['sent_at']}'),
+      );
+}
+
+/// Paginated envelope of GET /notifications (page_size default 20).
+class NotificationPage {
+  final List<NotificationItem> items;
+  final int total;
+  final int page;
+  final int pageSize;
+
+  const NotificationPage({
+    required this.items,
+    required this.total,
+    this.page = 1,
+    this.pageSize = 20,
+  });
+
+  factory NotificationPage.fromJson(Map<String, dynamic> j) => NotificationPage(
+        items: ((j['items'] ?? const <dynamic>[]) as List)
+            .cast<Map<String, dynamic>>()
+            .map(NotificationItem.fromJson)
+            .toList(),
+        total: (j['total'] ?? 0) as int,
+        page: (j['page'] ?? 1) as int,
+        pageSize: (j['page_size'] ?? 20) as int,
+      );
+}
+
+/// One row of GET /products/{id}/repairs — a repair in the product's history.
+class RepairEntry {
+  final String id;
+  final String productId;
+  final DateTime repairDate;
+  final String description;
+  final String? provider;
+  final num? cost;
+  final String? notes;
+
+  const RepairEntry({
+    required this.id,
+    required this.productId,
+    required this.repairDate,
+    required this.description,
+    this.provider,
+    this.cost,
+    this.notes,
+  });
+
+  factory RepairEntry.fromJson(Map<String, dynamic> j) => RepairEntry(
+        id: j['id'] as String,
+        productId: j['product_id'] as String,
+        repairDate: DateTime.parse(j['repair_date'] as String),
+        description: (j['description'] ?? '') as String,
+        provider: j['provider'] as String?,
+        cost: j['cost'] as num?,
+        notes: j['notes'] as String?,
+      );
+}

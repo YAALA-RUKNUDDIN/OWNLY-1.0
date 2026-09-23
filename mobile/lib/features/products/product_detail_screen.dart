@@ -8,6 +8,7 @@ import 'package:ownly/core/utils/formatters.dart';
 import 'package:ownly/data/models.dart';
 import 'package:ownly/data/repositories.dart';
 import 'package:ownly/features/products/products_controller.dart';
+import 'package:ownly/features/products/repairs_tab.dart';
 
 /// Product detail: overview, timeline, documents, warranty, repairs sections.
 class ProductDetailScreen extends ConsumerStatefulWidget {
@@ -90,7 +91,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                           _OverviewTab(state: state),
                           _TimelineTab(events: state.timeline),
                           _DocumentsTab(productId: widget.productId, documents: state.documents),
-                          _RepairsPlaceholder(productId: widget.productId),
+                          RepairsTab(productId: widget.productId, currency: p.currency),
                         ]),
                       ),
                     ],
@@ -340,18 +341,5 @@ class _DocumentsTab extends ConsumerWidget {
             .showSnackBar(SnackBar(content: Text('Upload failed: $e')));
       }
     }
-  }
-}
-
-class _RepairsPlaceholder extends ConsumerWidget {
-  final String productId;
-  const _RepairsPlaceholder({required this.productId});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return const Center(
-      child: Text('Repairs appear on the product timeline.',
-          style: TextStyle(color: OwnlyTheme.muted)),
-    );
   }
 }

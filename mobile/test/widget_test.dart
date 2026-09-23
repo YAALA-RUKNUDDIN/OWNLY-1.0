@@ -15,6 +15,10 @@ import 'package:ownly/data/repositories.dart';
 import 'package:ownly/features/authentication/login_screen.dart';
 import 'package:ownly/features/authentication/onboarding_screen.dart';
 import 'package:ownly/features/dashboard/today_screen.dart';
+import 'package:ownly/features/notifications/notification_history_screen.dart';
+import 'package:ownly/features/products/repairs_tab.dart';
+import 'package:ownly/features/profile/data_export_screen.dart';
+import 'package:ownly/features/subscription/subscription_screen.dart';
 
 /// Repository stub — widget tests must never hit the backend.
 /// (Constructing ApiClient/TokenStorage is side-effect free; no platform
@@ -52,6 +56,61 @@ class _FakeRepository extends OwnlyRepository {
 
   @override
   Future<List<NotificationPref>> notificationPrefs() async => const [];
+
+  @override
+  Future<SubscriptionInfo> subscription() async => SubscriptionInfo(
+        tier: 'premium',
+        status: 'active',
+        provider: 'manual',
+        expiresAt: DateTime(2030, 1, 1),
+        features: const ['ocr', 'data_export'],
+        usedProducts: 3,
+      );
+
+  @override
+  Future<NotificationPage> notifications({
+    String? category,
+    int page = 1,
+    int pageSize = 20,
+  }) async =>
+      NotificationPage(
+        items: [
+          NotificationItem(
+            id: 'n1',
+            category: 'warranty',
+            subjectType: 'warranty',
+            subjectId: 's1',
+            milestone: '30_days',
+            dueDate: DateTime(2026, 10, 1),
+            title: 'Warranty ending soon',
+            body: 'Your vacuum warranty ends in 30 days.',
+            deliveryStatus: 'sent',
+            sentAt: DateTime(2026, 9, 1),
+          ),
+        ],
+        total: 42,
+        page: page,
+        pageSize: pageSize,
+      );
+
+  @override
+  Future<List<RepairEntry>> repairs(String productId) async => [
+        RepairEntry(
+          id: 'r1',
+          productId: productId,
+          repairDate: DateTime(2026, 8, 1),
+          description: 'Replaced battery',
+          provider: 'FixIt',
+          cost: 49.99,
+        ),
+      ];
+
+  @override
+  Future<Map<String, dynamic>> exportData() async => {
+        'products': [1, 2],
+        'documents': [1],
+        'user': {'id': 'u1'},
+      };
 }
 
 /// Real router + fake repository: exercises onboarding/auth gates end-to-end.
@@ -130,5 +189,55 @@ void main() {
     expect(Formatters.daysRemaining(1), 'tomorrow');
     expect(Formatters.daysRemaining(7), 'in 7 days');
     expect(Formatters.daysRemaining(-2), '2 days ago');
+  });
+
+  testWidgets('SubscriptionScreen shows plan, usage and cancel action',
+      (tester) async {
+    await tester.pumpWidget(ProviderScope(
+      overrides: [repositoryProvider.overrideWithValue(_FakeRepository())],
+      child: const MaterialApp(home: SubscriptionScreen()),
+    ));
+    await tester.pumpAndSettle();
+    expect(find.text('Subscription'), findsOneWidget);
+    expect(find.text('Premium'), findsOneWidget);
+    expect(find.textContaining('3 products used'), findsOneWidget);
+    expect(find.text('Cancel plan'), findsOneWidget);
+  });
+
+  testWidgets('NotificationHistoryScreen lists history entries',
+      (tester) async {
+    await tester.pumpWidget(ProviderScope(
+      overrides: [repositoryProvider.overrideWithValue(_FakeRepository())],
+      child: const MaterialApp(home: NotificationHistoryScreen()),
+    ));
+    await tester.pumpAndSettle();
+    expect(find.text('Notification history'), findsOneWidget);
+    expect(find.text('Warranty ending soon'), findsOneWidget);
+    // Load-more shows paging progress against the server-side total.
+    expect(find.textContaining('of 42'), findsOneWidget);
+  });
+
+  testWidgets('DataExportScreen summarizes export sections', (tester) async {
+    await tester.pumpWidget(ProviderScope(
+      overrides: [repositoryProvider.overrideWithValue(_FakeRepository())],
+      child: const MaterialApp(home: DataExportScreen()),
+    ));
+    await tester.pumpAndSettle();
+    expect(find.text('Export my data'), findsOneWidget);
+    expect(find.text('products'), findsOneWidget);
+    expect(find.text('2 items'), findsOneWidget);
+  });
+
+  testWidgets('RepairsTab lists repair history with add action', (tester) async {
+    await tester.pumpWidget(ProviderScope(
+      overrides: [repositoryProvider.overrideWithValue(_FakeRepository())],
+      child: const MaterialApp(
+        home: Scaffold(body: RepairsTab(productId: 'p1')),
+      ),
+    ));
+    await tester.pumpAndSettle();
+    expect(find.text('Replaced battery'), findsOneWidget);
+    expect(find.text('Add repair'), findsOneWidget);
+    expect(find.textContaining('FixIt'), findsOneWidget);
   });
 }

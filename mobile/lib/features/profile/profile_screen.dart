@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import 'package:ownly/core/constants/api_constants.dart';
 import 'package:ownly/core/theme/ownly_theme.dart';
 import 'package:ownly/data/models.dart';
 import 'package:ownly/data/repositories.dart';
@@ -48,26 +50,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         'custom' => 'Custom reminders',
         _ => category,
       };
-
-  Future<void> _export() async {
-    setState(() => _busy = true);
-    try {
-      final data = await ref.read(repositoryProvider).exportData();
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(
-              'Export ready — ${data['products']?.length ?? 0} products. '
-              'A downloadable copy would be saved here.'),
-        ));
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Export failed: $e')));
-      }
-    }
-    if (mounted) setState(() => _busy = false);
-  }
 
   Future<void> _deleteAccount() async {
     final confirmed = await showDialog<bool>(
@@ -117,6 +99,25 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   style: const TextStyle(fontWeight: FontWeight.w700)),
               subtitle: Text(user?.email ?? ''),
             ),
+          ),
+          const SizedBox(height: 16),
+          const _Header('Account'),
+          Card(
+            child: Column(children: [
+              ListTile(
+                leading: const Icon(Icons.workspace_premium_outlined,
+                    color: OwnlyTheme.seed),
+                title: const Text('Subscription'),
+                subtitle: const Text('Plan, limits and usage'),
+                onTap: () => context.push(OwnlyRoutes.subscription),
+              ),
+              ListTile(
+                leading: const Icon(Icons.history, color: OwnlyTheme.seed),
+                title: const Text('Notification history'),
+                subtitle: const Text('What OWNLY has already sent you'),
+                onTap: () => context.push(OwnlyRoutes.notifications),
+              ),
+            ]),
           ),
           const SizedBox(height: 16),
           const _Header('Notifications'),
@@ -171,7 +172,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 leading: const Icon(Icons.download_outlined),
                 title: const Text('Export my data'),
                 subtitle: const Text('Download everything as JSON'),
-                onTap: _busy ? null : _export,
+                onTap: _busy ? null : () => context.push(OwnlyRoutes.dataExport),
               ),
               ListTile(
                 leading: const Icon(Icons.delete_forever, color: OwnlyTheme.danger),

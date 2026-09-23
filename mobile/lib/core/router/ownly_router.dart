@@ -7,12 +7,15 @@ import 'package:ownly/features/authentication/auth_controller.dart';
 import 'package:ownly/features/authentication/login_screen.dart';
 import 'package:ownly/features/authentication/onboarding_screen.dart';
 import 'package:ownly/features/dashboard/today_screen.dart';
+import 'package:ownly/features/notifications/notification_history_screen.dart';
 import 'package:ownly/features/products/add_product_screen.dart';
 import 'package:ownly/features/products/product_detail_screen.dart';
 import 'package:ownly/features/products/products_screen.dart';
+import 'package:ownly/features/profile/data_export_screen.dart';
 import 'package:ownly/features/profile/profile_screen.dart';
 import 'package:ownly/features/reminders/reminders_screen.dart';
 import 'package:ownly/features/shell/home_shell.dart';
+import 'package:ownly/features/subscription/subscription_screen.dart';
 
 /// Re-runs `GoRouter.redirect` whenever auth or onboarding state changes.
 /// Using `refreshListenable` (instead of `ref.watch` inside the provider)
@@ -80,6 +83,18 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: OwnlyRoutes.login,
         builder: (context, state) => const LoginScreen(),
+      ),
+      GoRoute(
+        path: OwnlyRoutes.subscription,
+        builder: (context, state) => const SubscriptionScreen(),
+      ),
+      GoRoute(
+        path: OwnlyRoutes.notifications,
+        builder: (context, state) => const NotificationHistoryScreen(),
+      ),
+      GoRoute(
+        path: OwnlyRoutes.dataExport,
+        builder: (context, state) => const DataExportScreen(),
       ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, shell) => HomeShell(shell: shell),

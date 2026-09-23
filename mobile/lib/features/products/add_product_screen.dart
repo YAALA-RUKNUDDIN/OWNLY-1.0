@@ -62,30 +62,58 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
     setState(() { _ocrRunning = true; _error = null; });
     try {
       final draft = await ref.read(repositoryProvider).ocrExtract(photo.path);
-      setState(() {
-        _draft = draft;
-        _ocrRunning = false;
-        // Pre-fill form — the user reviews/edits before saving (spec Rule 5).
-        if (draft.productName != null && _name.text.isEmpty) _name.text = draft.productName!;
-        if (draft.brand != null && _brand.text.isEmpty) _brand.text = draft.brand!;
-        if (draft.model != null && _model.text.isEmpty) _model.text = draft.model!;
-        if (draft.seller != null && _seller.text.isEmpty) _seller.text = draft.seller!;
-        if (draft.price != null && _price.text.isEmpty) {
-          _price.text = draft.price!.replaceAll(RegExp(r'[^0-9.]'), '');
-        }
-      });
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(
-              'Extracted a draft (confidence ${(draft.confidence * 100).toStringAsFixed(0)}%). '
-              'Please review every field before saving.'),
-          backgroundColor: OwnlyTheme.success,
-        ));
-      }
+      _applyDraft(draft, count: 1);
     } on ApiException catch (e) {
       setState(() { _ocrRunning = false; _error = e.message; });
     } catch (e) {
       setState(() { _ocrRunning = false; _error = 'Scan failed: $e'; });
+    }
+  }
+
+  /// Gallery path: pick one or more images, OCR each, keep the most
+  /// confident draft. Nothing is saved until the user confirms (spec Rule 5).
+  Future<void> _pickFromGallery() async {
+    final picker = ImagePicker();
+    final images = await picker.pickMultiImage(maxWidth: 2048, imageQuality: 85);
+    if (images.isEmpty) return;
+    setState(() { _ocrRunning = true; _error = null; });
+    try {
+      final repo = ref.read(repositoryProvider);
+      OcrDraft? best;
+      for (final image in images) {
+        final draft = await repo.ocrExtract(image.path);
+        if (best == null || draft.confidence > best.confidence) best = draft;
+      }
+      _applyDraft(best!, count: images.length);
+    } on ApiException catch (e) {
+      setState(() { _ocrRunning = false; _error = e.message; });
+    } catch (e) {
+      setState(() { _ocrRunning = false; _error = 'Scan failed: $e'; });
+    }
+  }
+
+  /// Pre-fill the form from an OCR draft — the user reviews/edits before
+  /// saving; OCR data is NEVER auto-saved (spec Rule 5).
+  void _applyDraft(OcrDraft draft, {required int count}) {
+    setState(() {
+      _draft = draft;
+      _ocrRunning = false;
+      if (draft.productName != null && _name.text.isEmpty) _name.text = draft.productName!;
+      if (draft.brand != null && _brand.text.isEmpty) _brand.text = draft.brand!;
+      if (draft.model != null && _model.text.isEmpty) _model.text = draft.model!;
+      if (draft.seller != null && _seller.text.isEmpty) _seller.text = draft.seller!;
+      if (draft.price != null && _price.text.isEmpty) {
+        _price.text = draft.price!.replaceAll(RegExp(r'[^0-9.]'), '');
+      }
+    });
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(
+            'Extracted a draft${count > 1 ? ' from $count images' : ''} '
+            '(confidence ${(draft.confidence * 100).toStringAsFixed(0)}%). '
+            'Please review every field before saving.'),
+        backgroundColor: OwnlyTheme.success,
+      ));
     }
   }
 
@@ -152,7 +180,12 @@ class _AddProductScreenState extends ConsumerState<AddProductScreen> {
                         child: _ocrRunning
                             ? const SizedBox(height: 18, width: 18,
                                 child: CircularProgressIndicator(strokeWidth: 2))
-                            : const Text('Scan'),
+                            : const Text('Camera'),
+                      ),
+                      const SizedBox(width: 8),
+                      OutlinedButton(
+                        onPressed: _ocrRunning ? null : _pickFromGallery,
+                        child: const Text('Gallery'),
                       ),
                     ]),
                     if (_draft != null) ...[
