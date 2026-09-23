@@ -1,0 +1,44 @@
+# ── Python ──────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# ── Environment / secrets — NEVER commit ────────────────
+.env
+.env.local
+*.env
+!*.example
+
+# ── Databases (local dev) ───────────────────────────────
+*.db
+*.sqlite3
+
+# ── Local object storage ────────────────────────────────
+backend/storage_data/
+backend/test_storage/
+storage_data/
+
+# ── Flutter / Dart ──────────────────────────────────────
+mobile/.dart_tool/
+mobile/.flutter-plugins*
+mobile/.packages
+mobile/build/
+mobile/.idea/
+mobile/android/.gradle/
+mobile/ios/Pods/
+mobile/ios/.symlinks/
+*.g.dart
+
+# ── Node (tooling) ──────────────────────────────────────
+node_modules/
+
+# ── IDE / OS ────────────────────────────────────────────
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
