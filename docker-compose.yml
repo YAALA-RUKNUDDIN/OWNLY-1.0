@@ -7,7 +7,8 @@ services:
       POSTGRES_PASSWORD: ownly_secret
       POSTGRES_DB: ownly
     ports:
-      # Host port 5433 avoids conflict with native PostgreSQL on host
+      # Host port 5433 avoids conflict with native PostgreSQL on Windows/macOS.
+      # Inside Docker network, services communicate via standard 5432.
       - "5433:5432"
     volumes:
       - ownly_pgdata:/var/lib/postgresql/data
@@ -34,7 +35,7 @@ services:
 
   api:
     build:
-      context: .
+      context: ./backend
       dockerfile: Dockerfile
     container_name: ownly-api
     ports:
@@ -62,6 +63,29 @@ services:
       timeout: 5s
       start_period: 10s
       retries: 5
+    restart: unless-stopped
+
+  scheduler:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: ownly-scheduler
+    command: python -m app.workers.scheduler
+    environment:
+      DATABASE_URL: postgresql+psycopg2://ownly:ownly_secret@postgres:5432/ownly
+      REDIS_URL: redis://redis:6379/0
+      JWT_SECRET: ownly_production_secret_key_minimum_32_characters_random
+      STORAGE_PROVIDER: local
+      STORAGE_LOCAL_PATH: /app/storage
+      PUSH_PROVIDER: noop
+      ENVIRONMENT: production
+    depends_on:
+      api:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ownly_storage:/app/storage
     restart: unless-stopped
 
 volumes:

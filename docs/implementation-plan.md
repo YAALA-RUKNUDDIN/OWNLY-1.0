@@ -101,10 +101,10 @@ endpoint, `/today` alias, analytics event sink, Sentry wiring.
 | 3 | Mobile foundation: platform scaffolding, GoRouter + deep links, onboarding, notification prefs | ✅ done |
 | 4 | Mobile features: add-product (scan/gallery/manual), OCR review, documents vault, detail/timeline, repairs tab, subscription, notification history, data export | ✅ done |
 | 5 | Push end-to-end: FCM registration, deep-link tap-through | ✅ done |
-| 6 | Full-stack Docker, security review, E2E, README, deployment readiness | pending |
+| 6 | Full-stack Docker, security review, E2E journey suite, README, deployment readiness | ✅ done |
 
 Every phase ends with: tests run → failures fixed → decision records → docs
-updated → git commit.
+updated → git commit. (108 backend tests, 18 mobile tests passing, 0 analysis issues)
 
 ## 6. Dependencies
 

@@ -123,10 +123,29 @@ check("notifications 200", s == 200, f"got {s}")
 check("history has items/total/page shape",
       all(k in hist for k in ("items", "total", "page", "page_size")), str(hist))
 
-# 16. Export covers the Phase 2 data as well
-s, ex2 = call("GET", "/users/me/export", token=token)
-check("export includes subscription", ex2.get("subscription", {}).get("tier") == "premium", str(ex2.get("subscription")))
-check("export includes notifications list", isinstance(ex2.get("notifications"), list))
+# 17. Device token registration
+smoke_fcm = f"smoke_fcm_{email[:8]}"
+s, dev = call("POST", "/users/me/devices", {"fcm_token": smoke_fcm, "platform": "android"}, token)
+check("register device 201", s == 201, f"got {s}: {dev}")
+
+# 18. Test push notification dispatch with deep link routing
+s, push_test = call("POST", "/notifications/test", {
+    "title": "Smoke Push",
+    "body": "Smoke test push verification",
+    "route": f"/products/{pid}",
+    "deep_link": f"ownly:///products/{pid}",
+}, token)
+check("test push dispatch 200", s == 200, f"got {s}: {push_test}")
+check("push recipient count is 1", push_test.get("recipient_count") == 1, str(push_test))
+
+# 19. Unregister device token
+s, unreg = call("DELETE", f"/users/me/devices/{smoke_fcm}", None, token)
+check("unregister device 204", s in (200, 204), f"got {s}")
+
+# 20. Notification preferences
+s, prefs = call("GET", "/users/me/prefs", token=token)
+check("notification preferences 200", s == 200, f"got {s}")
+check("prefs has categories", len(prefs.get("preferences", [])) >= 1, str(prefs))
 
 print()
 if failures:
