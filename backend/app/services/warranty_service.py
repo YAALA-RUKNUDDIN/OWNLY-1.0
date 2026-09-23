@@ -9,6 +9,8 @@ from __future__ import annotations
 
 from datetime import date, datetime, timedelta
 
+from app.core.datetime_utils import as_aware
+
 EXPIRING_SOON_DAYS = 30
 RETURN_EXPIRING_SOON_DAYS = 5
 
@@ -63,13 +65,17 @@ def warranty_milestones(end_date: datetime | date, today: date | None = None) ->
 
 
 def resolve_end_date(start_date: datetime, end_date: datetime | None, duration_months: int | None) -> datetime:
-    """Derive end_date from duration_months when not explicitly given."""
+    """Derive end_date from duration_months when not explicitly given.
+
+    The returned value is timezone-aware (UTC) so persisted values behave
+    identically on SQLite and PostgreSQL (see app/core/datetime_utils).
+    """
     if end_date:
-        return end_date
+        return as_aware(end_date)
     if duration_months:
         month = start_date.month - 1 + duration_months
         year = start_date.year + month // 12
         month = month % 12 + 1
         day = min(start_date.day, [31, 29 if year % 4 == 0 and (year % 100 != 0 or year % 400 == 0) else 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][month - 1])
-        return datetime(year, month, day)
+        return as_aware(datetime(year, month, day))
     raise ValueError("Either end_date or duration_months is required")

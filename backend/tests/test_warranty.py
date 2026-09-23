@@ -71,16 +71,28 @@ class TestMilestones:
 class TestResolveEndDate:
     def test_explicit_end_date(self):
         end = datetime(2027, 6, 1)
-        assert resolve_end_date(datetime(2026, 6, 1), end, None) == end
+        result = resolve_end_date(datetime(2026, 6, 1), end, None)
+        # Contract: result is normalized to timezone-aware UTC (SQLite/PG parity).
+        assert result.tzinfo is not None
+        assert result.replace(tzinfo=None) == end
 
     def test_duration_months(self):
         result = resolve_end_date(datetime(2026, 1, 15), None, 12)
         assert result.date() == date(2027, 1, 15)
+        assert result.tzinfo is not None
 
     def test_month_end_clamping(self):
         # Jan 31 + 1 month → Feb 28 (2026 not a leap year)
         result = resolve_end_date(datetime(2026, 1, 31), None, 1)
         assert result.date() == date(2026, 2, 28)
+        assert result.tzinfo is not None
+
+    def test_aware_input_is_preserved(self):
+        from datetime import timezone
+        start = datetime(2026, 6, 1, tzinfo=timezone.utc)
+        result = resolve_end_date(start, None, 6)
+        assert result.tzinfo is not None
+        assert result.date() == date(2026, 12, 1)
 
     def test_requires_something(self):
         import pytest

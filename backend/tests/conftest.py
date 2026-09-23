@@ -1,5 +1,6 @@
 """Test fixtures. Tests run against the dockerized Postgres using a
-dedicated test database (set TEST_DATABASE_URL or the default below)."""
+dedicated test database (set TEST_DATABASE_URL, or set DATABASE_URL for a
+SQLite run — e.g. `python _check_import.py`)."""
 import os
 
 import pytest
@@ -7,7 +8,7 @@ from fastapi.testclient import TestClient
 
 os.environ.setdefault(
     "DATABASE_URL",
-    os.environ.get("TEST_DATABASE_URL", "postgresql+psycopg2://ownly:ownly_secret@localhost:5432/ownly_test"),
+    os.environ.get("TEST_DATABASE_URL", "postgresql+psycopg2://ownly:ownly_secret@localhost:5433/ownly_test"),
 )
 os.environ.setdefault("STORAGE_PROVIDER", "local")
 os.environ.setdefault("STORAGE_LOCAL_PATH", "./test_storage")

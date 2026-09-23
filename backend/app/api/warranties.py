@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user
 from app.core.database import get_db
+from app.core.datetime_utils import as_aware
 from app.core.errors import ConflictError, NotFoundError, ValidationError
 from app.models import EventType, Product, User, Warranty
 from app.repositories.product_repo import ProductRepository
@@ -44,7 +45,7 @@ def create_warranty(
         end_date = resolve_end_date(body.start_date, body.end_date, body.duration_months)
     except ValueError as e:
         raise ValidationError(str(e))
-    if end_date <= body.start_date:
+    if as_aware(end_date) <= as_aware(body.start_date):
         raise ValidationError("Warranty end date must be after the start date.")
 
     warranty = Warranty(
@@ -109,11 +110,11 @@ def update_warranty(
             warranty.end_date = resolve_end_date(warranty.start_date, body.end_date, body.duration_months)
         except ValueError as e:
             raise ValidationError(str(e))
-    if warranty.end_date <= warranty.start_date:
+    if as_aware(warranty.end_date) <= as_aware(warranty.start_date):
         raise ValidationError("Warranty end date must be after the start date.")
     db.add(warranty)
 
-    if warranty.end_date > old_end:
+    if as_aware(warranty.end_date) > as_aware(old_end):
         record_event(
             db, warranty.product_id, EventType.warranty_extended,
             title="Warranty extended",

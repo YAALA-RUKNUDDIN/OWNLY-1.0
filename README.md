@@ -116,7 +116,9 @@ Base path `/api/v1`. Uniform error envelope:
 
 ## Verification status (re-executed 2026-09-23, this machine)
 
-- ✅ **`pytest`: 63/63 passed** (SQLite runner: `backend/_check_import.py`). Covers auth
+- ✅ **`pytest`: 64/64 passed** (SQLite runner: `backend/_check_import.py`) **and
+  64/64 passed on PostgreSQL 16** (`TEST_DATABASE_URL` → Docker Postgres on
+  host port 5433). Covers auth
   rotation + reuse detection, user isolation, warranty boundary math, documents
   signed-URL round-trip, export, account deletion, worker idempotency, and 16 new
   unit tests for the TodayService classifiers (buckets, severity, date math).

@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 from app.api.deps import get_current_user
 from app.core.config import settings
 from app.core.database import get_db
+from app.core.datetime_utils import as_aware
 from app.core.errors import ConflictError, UnauthorizedError
 from app.core.security import (
     create_access_token,
@@ -26,11 +27,6 @@ from app.schemas.auth import (
 from app.services.user_service import ensure_default_prefs
 
 router = APIRouter(prefix="/auth", tags=["auth"])
-
-
-def _as_aware(dt: datetime) -> datetime:
-    """SQLite returns naive datetimes; treat stored values as UTC."""
-    return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
 
 
 def _issue_pair(db: Session, user: User, device_label: str | None = None) -> TokenPair:
@@ -97,7 +93,7 @@ def refresh(body: RefreshRequest, db: Session = Depends(get_db)):
         )
         db.commit()
         raise UnauthorizedError("Refresh token reuse detected. Please log in again.")
-    if stored.expires_at and _as_aware(stored.expires_at) < datetime.now(timezone.utc):
+    if stored.expires_at and as_aware(stored.expires_at) < datetime.now(timezone.utc):
         raise UnauthorizedError("Refresh token expired. Please log in again.")
 
     stored.revoked = True

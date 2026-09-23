@@ -13,7 +13,10 @@ class Settings(BaseSettings):
     API_PORT: int = 8000
 
     # Database
-    DATABASE_URL: str = "postgresql+psycopg2://ownly:ownly_secret@localhost:5432/ownly"
+    # NOTE: the Docker Postgres in docker-compose.yml is published on host port
+    # 5433 to avoid clashing with a native Windows PostgreSQL service on 5432
+    # (see docs/decisions/D-006).
+    DATABASE_URL: str = "postgresql+psycopg2://ownly:ownly_secret@localhost:5433/ownly"
 
     # Redis
     REDIS_URL: str = "redis://localhost:6379/0"

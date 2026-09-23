@@ -94,7 +94,7 @@ endpoint, `/today` alias, analytics event sink.
 | Phase | Scope | Status |
 |---|---|---|
 | 0 | Repo inspection, gap analysis, this plan | ✅ done |
-| 1 | Repair backend, tests green (47/47), Alembic baseline, docs, git | ✅ done |
+| 1 | Repair backend, tests green (64/64 on SQLite **and** PostgreSQL), Alembic baseline (round-trip verified on PG), docs, git | ✅ done |
 | 2 | Subscriptions/feature gating, notification history, analytics + Sentry abstractions | next |
 | 3 | Mobile foundation: platform scaffolding, GoRouter + deep links, onboarding | pending |
 | 4 | Mobile features: add-product (scan/upload/manual), OCR review, documents vault, detail/timeline | pending |

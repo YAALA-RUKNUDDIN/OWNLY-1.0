@@ -253,3 +253,20 @@ def downgrade() -> None:
     op.drop_index(op.f('ix_users_email'), table_name='users')
     op.drop_table('users')
     # ### end Alembic commands ###
+
+    # PostgreSQL keeps native ENUM types after their owning tables are dropped,
+    # which makes a subsequent `alembic upgrade head` fail with
+    # "type ... already exists". Drop them explicitly after the tables are gone.
+    # (SQLite has no native enum types — guarded by dialect.)
+    bind = op.get_bind()
+    if bind.dialect.name == "postgresql":
+        for enum_name in (
+            "document_type",
+            "event_type",
+            "notification_category",
+            "product_status",
+            "reminder_status",
+            "reminder_type",
+            "warranty_type",
+        ):
+            op.execute(sa.text(f"DROP TYPE IF EXISTS {enum_name}"))

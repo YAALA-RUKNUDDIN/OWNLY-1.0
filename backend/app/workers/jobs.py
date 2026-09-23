@@ -7,6 +7,7 @@ from sqlalchemy import delete, select
 from sqlalchemy.orm import joinedload
 
 from app.core.database import SessionLocal
+from app.core.datetime_utils import utc_now
 from app.integrations.push import get_push
 from app.models import (
     DeviceToken, NotificationCategory, NotificationLog, NotificationPreference,
@@ -149,7 +150,7 @@ def run_daily_scan() -> dict:
             if _notify(db, r.user_id, "reminder", r.id, "due", r.scheduled_date,
                        NotificationCategory(cat), r.title, r.description or r.title):
                 stats["reminder"] += 1
-                r.notified_at = datetime.now()
+                r.notified_at = utc_now()
                 db.add(r)
 
         db.commit()

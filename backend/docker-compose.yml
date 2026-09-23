@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   postgres:
     image: postgres:16-alpine
@@ -8,7 +6,9 @@ services:
       POSTGRES_PASSWORD: ownly_secret
       POSTGRES_DB: ownly
     ports:
-      - "5432:5432"
+      # Host port 5433 avoids clashing with a native Windows PostgreSQL
+      # service that may also listen on 5432 (see docs/decisions/D-006).
+      - "5433:5432"
     volumes:
       - ownly_pgdata:/var/lib/postgresql/data
     healthcheck:

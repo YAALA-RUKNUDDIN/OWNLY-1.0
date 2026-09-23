@@ -35,8 +35,14 @@ SQLite for dev/test.
 ## Consequences
 
 - Datetime handling must tolerate naive (SQLite) vs aware (PG) values —
-  centralized in `auth.py::_as_aware` and worker code.
+  centralized in `app/core/datetime_utils.py::as_aware` (used by auth
+  refresh-expiry checks, warranty date comparisons, and the reminder worker).
+  `resolve_end_date` now always returns an aware UTC value.
 - Alembic migrations must be validated on PostgreSQL before release; SQLite
   schema is bootstrapped via `Base.metadata.create_all`.
+- PostgreSQL keeps native ENUM types after their tables are dropped, so
+  `downgrade()` in each migration must drop the enum types explicitly
+  (dialect-guarded) to keep `upgrade → downgrade → upgrade` idempotent.
+  Verified for the baseline migration on both engines.
 - Some PG-specific features (JSONB, partial indexes) are avoided in ORM so the
   schema remains portable.
