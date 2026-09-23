@@ -88,6 +88,8 @@ class ProductOut(BaseModel):
     image_url: str | None
     notes: str | None
     created_at: datetime
+    household_id: uuid.UUID | None = None
+    is_shared: bool = False
     warranty: WarrantyStatusOut | None = None
     return_window: ReturnStatusOut | None = None
 
