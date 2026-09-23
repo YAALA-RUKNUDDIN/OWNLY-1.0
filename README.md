@@ -207,7 +207,7 @@ Base path: `/api/v1`. All endpoints return standard HTTP status codes and a unif
 ### Test Suite Execution
 
 #### Backend Pytest Suite
-Run the full test suite (108 tests covering auth, security, user isolation, warranty math, today urgency, push notifications, and full end-to-end journey):
+Run the full test suite (126 tests covering auth, security, user isolation, warranty math, today urgency, push notifications, cloud integrations, and full end-to-end journey):
 
 ```bash
 cd backend
@@ -218,6 +218,11 @@ pytest -v
 #### End-to-End User Journey & Security Suite
 ```bash
 pytest tests/test_e2e_journey.py -v
+```
+
+#### Production Cloud Integrations Suite
+```bash
+pytest tests/test_cloud_integrations.py -v
 ```
 
 #### Flutter Mobile Test Suite
@@ -252,4 +257,5 @@ python smoke_test.py http://localhost:8000/api/v1
 | **Notifications** | Push dispatch + device lifecycle + deep linking | ✅ Complete | Verified in `test_push.py` and mobile `notification_test.dart` |
 | **Mobile App** | Riverpod + GoRouter + Responsive UI + Offline handling | ✅ Complete | 18 mobile tests green, 0 `flutter analyze` issues |
 | **Containerization** | Docker Compose orchestration with healthchecks | ✅ Complete | Root `docker-compose.yml` validated with persistent volumes |
-| **Documentation** | Production README + Architecture Decision Records | ✅ Complete | ADRs D-001 through D-011 recorded in `docs/decisions/` |
+| **Cloud Integrations** | AWS S3/R2, Google Vision OCR dual auth, FCM HTTP v1 | ✅ Complete | 18 integration tests passing in `test_cloud_integrations.py` |
+| **Documentation** | Production README + Architecture Decision Records | ✅ Complete | ADRs D-001 through D-012 recorded in `docs/decisions/` |

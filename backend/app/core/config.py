@@ -35,15 +35,20 @@ class Settings(BaseSettings):
     S3_ACCESS_KEY_ID: str = ""
     S3_SECRET_ACCESS_KEY: str = ""
     S3_REGION: str = "auto"
+    S3_FORCE_PATH_STYLE: bool = False
+    S3_SIGNATURE_VERSION: str = "s3v4"
 
     # OCR
     OCR_PROVIDER: str = "tesseract"  # tesseract | google_vision
     GOOGLE_VISION_API_KEY: str = ""
+    GOOGLE_APPLICATION_CREDENTIALS: str = ""
+    GOOGLE_CREDENTIALS_JSON: str = ""
     TESSERACT_CMD: str = ""
 
     # Push
     PUSH_PROVIDER: str = "noop"  # noop | fcm
     FCM_CREDENTIALS_PATH: str = ""
+    FCM_CREDENTIALS_JSON: str = ""
 
     # Admin bootstrap
     ADMIN_EMAIL: str = "admin@ownly.local"
