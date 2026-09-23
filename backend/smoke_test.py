@@ -30,7 +30,7 @@ def check(name, condition, detail=""):
 
 
 # 1. Register
-email = f"smoke_{__import__('random').randint(1000,9999)}@ownly.local"
+email = f"smoke_{__import__('random').randint(1000,9999)}@ownlymail.com"
 s, r = call("POST", "/auth/register", {"name": "Smoke User", "email": email, "password": "smokepassword1"})
 check("register returns 201", s == 201, f"got {s}: {r}")
 token = r.get("tokens", {}).get("access_token", "")
@@ -84,7 +84,6 @@ s, ex = call("GET", "/users/me/export", token=token)
 check("export 200 with 1 product", s == 200 and len(ex.get("products", [])) >= 1, f"got {s}")
 
 # 10. Refresh rotation
-s2, rr = call("POST", "/auth/refresh", body=None)  # placeholder, need refresh token
 # Re-login to get a fresh refresh token
 s, r2 = call("POST", "/auth/login", {"email": email, "password": "smokepassword1"})
 refresh = r2.get("tokens", {}).get("refresh_token", "")
@@ -96,6 +95,38 @@ check("refresh reuse rejected 401", s == 401, f"got {s}")
 # 11. Unauthenticated access denied
 s, _ = call("GET", "/products")
 check("unauthenticated 401", s == 401, f"got {s}")
+
+# 12. Subscription defaults to the free plan with a visible cap
+s, sub = call("GET", "/subscription", token=token)
+check("subscription 200", s == 200, f"got {s}")
+check("default tier is free", sub.get("tier") == "free", str(sub))
+check("free tier exposes product cap", sub.get("limits", {}).get("max_products") == 10, str(sub.get("limits")))
+check("usage counts the created product", sub.get("usage", {}).get("products") == 1, str(sub.get("usage")))
+
+# 13. Premium activation lifts the cap
+s, sub2 = call("POST", "/subscription/activate", {"months": 12}, token)
+check("activate premium 200", s == 200, f"got {s}: {sub2}")
+check("tier is premium", sub2.get("tier") == "premium", str(sub2))
+check("premium is unlimited", sub2.get("limits", {}).get("max_products") is None, str(sub2.get("limits")))
+s, sub3 = call("POST", "/subscription/cancel", None, token)
+check("cancel returns 200", s == 200, f"got {s}")
+check("canceled but still entitled", sub3.get("tier") == "premium" and sub3.get("status") == "canceled", str(sub3))
+
+# 14. `/today` alias matches the canonical dashboard path
+s, today_alias = call("GET", "/today", token=token)
+check("today alias 200", s == 200, f"got {s}")
+check("today alias has stats", today_alias.get("stats", {}).get("total_products", 0) >= 1, str(today_alias.get("stats")))
+
+# 15. Notification history endpoint
+s, hist = call("GET", "/notifications", token=token)
+check("notifications 200", s == 200, f"got {s}")
+check("history has items/total/page shape",
+      all(k in hist for k in ("items", "total", "page", "page_size")), str(hist))
+
+# 16. Export covers the Phase 2 data as well
+s, ex2 = call("GET", "/users/me/export", token=token)
+check("export includes subscription", ex2.get("subscription", {}).get("tier") == "premium", str(ex2.get("subscription")))
+check("export includes notifications list", isinstance(ex2.get("notifications"), list))
 
 print()
 if failures:

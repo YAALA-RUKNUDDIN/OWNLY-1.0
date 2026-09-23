@@ -8,6 +8,7 @@ from sqlalchemy import func, select, update
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user
+from app.core.analytics_events import AnalyticsEvent
 from app.core.config import settings
 from app.core.database import get_db
 from app.core.datetime_utils import as_aware
@@ -19,6 +20,7 @@ from app.core.security import (
     hash_token,
     verify_password,
 )
+from app.integrations.analytics import track
 from app.models import RefreshToken, User
 from app.schemas.auth import (
     AuthResponse, LoginRequest, LogoutRequest, RefreshRequest, RegisterRequest,
@@ -63,6 +65,7 @@ def register(body: RegisterRequest, db: Session = Depends(get_db)):
     ensure_default_prefs(db, user.id)
     tokens = _issue_pair(db, user)
     db.commit()
+    track(AnalyticsEvent.user_registered, user.id)
     return AuthResponse(user=UserOut.model_validate(user), tokens=tokens)
 
 
@@ -74,6 +77,7 @@ def login(body: LoginRequest, db: Session = Depends(get_db)):
     ensure_default_prefs(db, user.id)
     tokens = _issue_pair(db, user)
     db.commit()
+    track(AnalyticsEvent.user_logged_in, user.id)
     return AuthResponse(user=UserOut.model_validate(user), tokens=tokens)
 
 

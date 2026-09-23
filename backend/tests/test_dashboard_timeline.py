@@ -27,6 +27,15 @@ class TestDashboard:
         assert body["attention"] == []
         assert body["greeting"]
 
+    def test_today_alias_matches_canonical_path(self, client, auth_headers):
+        """`/today` is the product-facing path — same payload, no divergence."""
+        headers, _ = auth_headers
+        _mk_product(client, headers)
+        canonical = client.get("/api/v1/dashboard/today", headers=headers)
+        alias = client.get("/api/v1/today", headers=headers)
+        assert alias.status_code == 200, alias.text
+        assert alias.json() == canonical.json()
+
     def test_expiring_warranty_in_attention(self, client, auth_headers):
         headers, _ = auth_headers
         soon = datetime.now() + timedelta(days=10)
@@ -160,7 +169,7 @@ class TestDocuments:
 class TestDataOwnership:
     def test_export_and_delete_account(self, client):
         import uuid as _uuid
-        email = f"export_{_uuid.uuid4().hex[:6]}@example.com"
+        email = f"export_{_uuid.uuid4().hex[:6]}@ownlymail.com"
         reg = client.post("/api/v1/auth/register", json={"name": "E", "email": email, "password": "password123"})
         headers = {"Authorization": f"Bearer {reg.json()['tokens']['access_token']}"}
         _mk_product(client, headers, name="Exported Laptop")

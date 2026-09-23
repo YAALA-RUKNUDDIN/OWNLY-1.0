@@ -6,8 +6,10 @@ from datetime import date, datetime, timedelta
 from sqlalchemy import delete, select
 from sqlalchemy.orm import joinedload
 
+from app.core.analytics_events import AnalyticsEvent
 from app.core.database import SessionLocal
 from app.core.datetime_utils import utc_now
+from app.integrations.analytics import track
 from app.integrations.push import get_push
 from app.models import (
     DeviceToken, NotificationCategory, NotificationLog, NotificationPreference,
@@ -80,6 +82,8 @@ def _notify(db, user_id, subject_type, subject_id, milestone, due_date,
     except Exception as e:
         log.delivery_status = "failed"
         logger.error("Push send failed for user %s: %s", user_id, e)
+    track(AnalyticsEvent.notification_sent, user_id, {"category": category.value, "milestone": milestone,
+                                                      "delivery_status": log.delivery_status})
     return True
 
 

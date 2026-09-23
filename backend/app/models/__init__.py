@@ -2,6 +2,7 @@
 from app.models.user import (
     User, RefreshToken, DeviceToken, NotificationCategory, NotificationPreference,
 )
+from app.models.subscription import PlanTier, Subscription, SubscriptionStatus
 from app.models.product import Product, ProductStatus
 from app.models.warranty import Warranty, WarrantyType
 from app.models.document import Document, DocumentType
@@ -13,6 +14,7 @@ from app.models.notification_log import NotificationLog
 
 __all__ = [
     "User", "RefreshToken", "DeviceToken", "NotificationCategory", "NotificationPreference",
+    "PlanTier", "Subscription", "SubscriptionStatus",
     "Product", "ProductStatus",
     "Warranty", "WarrantyType",
     "Document", "DocumentType",

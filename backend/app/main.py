@@ -8,10 +8,14 @@ from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
 from starlette.requests import Request
 
-from app.api import admin, auth, documents, files, ocr, products, repairs, reminders, timeline, users, warranties
+from app.api import (
+    admin, auth, documents, files, notifications, ocr, products, repairs,
+    reminders, subscriptions, timeline, users, warranties,
+)
 from app.core.config import settings
 from app.core.errors import AppError, register_error_handlers
 from app.core.database import Base, engine
+from app.integrations.monitoring import init_sentry
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname)s %(message)s")
 logger = logging.getLogger("ownly")
@@ -30,6 +34,7 @@ async def lifespan(app: FastAPI):
 
 
 def create_app() -> FastAPI:
+    init_sentry()  # no-op unless SENTRY_DSN is configured
     app = FastAPI(
         title=f"{settings.APP_NAME} API",
         version="1.0.0",
@@ -53,9 +58,13 @@ def create_app() -> FastAPI:
     app.include_router(ocr.router, prefix=api_prefix)
     app.include_router(files.router, prefix=api_prefix)
     app.include_router(admin.router, prefix=api_prefix)
+    app.include_router(subscriptions.router, prefix=api_prefix)
+    app.include_router(notifications.router, prefix=api_prefix)
 
+    from app.api.dashboard import alias_router as today_alias_router
     from app.api.dashboard import router as dashboard_router
     app.include_router(dashboard_router, prefix=api_prefix)
+    app.include_router(today_alias_router, prefix=api_prefix)
 
     @app.get("/health", tags=["health"])
     def health():

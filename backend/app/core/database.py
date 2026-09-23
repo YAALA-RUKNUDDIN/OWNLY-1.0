@@ -14,7 +14,7 @@ auditing import sites):
 """
 import uuid
 
-from sqlalchemy import CHAR, MetaData, create_engine
+from sqlalchemy import CHAR, MetaData, create_engine, event
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 from sqlalchemy.types import TypeDecorator
@@ -69,7 +69,18 @@ def _build_engine():
     if url.startswith("sqlite"):
         # SQLite (dev/test): allow the session to be shared across
         # FastAPI's threadpool threads.
-        return create_engine(url, connect_args={"check_same_thread": False})
+        sqlite_engine = create_engine(url, connect_args={"check_same_thread": False})
+
+        # SQLite ignores foreign keys (including ON DELETE CASCADE) unless
+        # asked not to — enable per connection so account deletion and other
+        # cascades behave exactly as they do on production PostgreSQL.
+        @event.listens_for(sqlite_engine, "connect")
+        def _enable_sqlite_foreign_keys(dbapi_connection, _connection_record):  # pragma: no cover
+            cursor = dbapi_connection.cursor()
+            cursor.execute("PRAGMA foreign_keys=ON")
+            cursor.close()
+
+        return sqlite_engine
     # PostgreSQL (production): pre-ping drops connections killed by the
     # server or an intermediate LB instead of surfacing them as 500s.
     return create_engine(url, pool_pre_ping=True, pool_size=10, max_overflow=20)

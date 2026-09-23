@@ -4,7 +4,7 @@ import uuid
 
 def test_register_success(client):
     resp = client.post("/api/v1/auth/register", json={
-        "name": "Alice", "email": f"alice_{uuid.uuid4().hex[:6]}@example.com", "password": "password123",
+        "name": "Alice", "email": f"alice_{uuid.uuid4().hex[:6]}@ownlymail.com", "password": "password123",
     })
     assert resp.status_code == 201
     body = resp.json()
@@ -14,7 +14,7 @@ def test_register_success(client):
 
 
 def test_register_duplicate_email_conflict(client):
-    email = f"dup_{uuid.uuid4().hex[:6]}@example.com"
+    email = f"dup_{uuid.uuid4().hex[:6]}@ownlymail.com"
     r1 = client.post("/api/v1/auth/register", json={"name": "A", "email": email, "password": "password123"})
     assert r1.status_code == 201
     r2 = client.post("/api/v1/auth/register", json={"name": "B", "email": email.upper(), "password": "password123"})
@@ -23,13 +23,13 @@ def test_register_duplicate_email_conflict(client):
 
 def test_register_short_password_rejected(client):
     resp = client.post("/api/v1/auth/register", json={
-        "name": "A", "email": f"short_{uuid.uuid4().hex[:6]}@example.com", "password": "short",
+        "name": "A", "email": f"short_{uuid.uuid4().hex[:6]}@ownlymail.com", "password": "short",
     })
     assert resp.status_code == 422
 
 
 def test_login_success_and_wrong_password(client):
-    email = f"login_{uuid.uuid4().hex[:6]}@example.com"
+    email = f"login_{uuid.uuid4().hex[:6]}@ownlymail.com"
     client.post("/api/v1/auth/register", json={"name": "L", "email": email, "password": "password123"})
     ok = client.post("/api/v1/auth/login", json={"email": email, "password": "password123"})
     assert ok.status_code == 200
@@ -39,7 +39,7 @@ def test_login_success_and_wrong_password(client):
 
 
 def test_refresh_rotation_and_reuse_detection(client):
-    email = f"rot_{uuid.uuid4().hex[:6]}@example.com"
+    email = f"rot_{uuid.uuid4().hex[:6]}@ownlymail.com"
     reg = client.post("/api/v1/auth/register", json={"name": "R", "email": email, "password": "password123"})
     refresh_token = reg.json()["tokens"]["refresh_token"]
 
@@ -68,11 +68,11 @@ def test_me_with_token(client, auth_headers):
     headers, _ = auth_headers
     resp = client.get("/api/v1/auth/me", headers=headers)
     assert resp.status_code == 200
-    assert resp.json()["email"].endswith("@example.com")
+    assert resp.json()["email"].endswith("@ownlymail.com")
 
 
 def test_logout_revokes_refresh(client):
-    email = f"out_{uuid.uuid4().hex[:6]}@example.com"
+    email = f"out_{uuid.uuid4().hex[:6]}@ownlymail.com"
     reg = client.post("/api/v1/auth/register", json={"name": "O", "email": email, "password": "password123"})
     tokens = reg.json()["tokens"]
     lo = client.post("/api/v1/auth/logout", json={"refresh_token": tokens["refresh_token"]})

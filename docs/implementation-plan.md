@@ -81,13 +81,15 @@ at read time; cascade deletes from users/products.
 | Reminders | GET/POST /reminders, PATCH/DELETE /reminders/{id} |
 | Timeline | GET /products/{id}/timeline |
 | Service/Repairs | POST/GET /products/{id}/service-records, /repairs |
-| **Today** | GET /dashboard/today — attention / upcoming / recently_added / stats |
+| **Today** | GET /dashboard/today (alias GET /today) — attention / upcoming / recently_added / stats |
 | OCR | POST /ocr/extract — returns editable draft, **saves nothing** |
 | User | PATCH /users/me, prefs, devices, GET export, DELETE account |
+| Subscription | GET /subscription, POST /subscription/activate, POST /subscription/cancel |
+| Notifications | GET /notifications (history, filters, pagination) |
 | Admin | GET /admin/stats |
 
-Upcoming (Phase 2+): subscriptions + feature gating, notification history
-endpoint, `/today` alias, analytics event sink.
+Shipped in Phase 2: subscriptions + feature gating, notification history
+endpoint, `/today` alias, analytics event sink, Sentry wiring.
 
 ## 5. Development Phases
 
@@ -95,7 +97,7 @@ endpoint, `/today` alias, analytics event sink.
 |---|---|---|
 | 0 | Repo inspection, gap analysis, this plan | ✅ done |
 | 1 | Repair backend, tests green (64/64 on SQLite **and** PostgreSQL), Alembic baseline (round-trip verified on PG), docs, git | ✅ done |
-| 2 | Subscriptions/feature gating, notification history, analytics + Sentry abstractions | next |
+| 2 | Subscriptions/feature gating, notification history, analytics + Sentry abstractions | ✅ done |
 | 3 | Mobile foundation: platform scaffolding, GoRouter + deep links, onboarding | pending |
 | 4 | Mobile features: add-product (scan/upload/manual), OCR review, documents vault, detail/timeline | pending |
 | 5 | Push end-to-end: FCM registration, deep-link tap-through | pending |

@@ -53,6 +53,14 @@ class Settings(BaseSettings):
     MAX_UPLOAD_SIZE_MB: int = 10
     ALLOWED_DOC_TYPES: str = "application/pdf,image/jpeg,image/png,image/heic,image/webp"
 
+    # Plans / monetization
+    FREE_PRODUCT_LIMIT: int = 10  # active products allowed on the free tier
+
+    # Observability
+    ANALYTICS_PROVIDER: str = "log"  # log | noop
+    SENTRY_DSN: str = ""             # empty = error tracking disabled
+    SENTRY_TRACES_SAMPLE_RATE: float = 0.0
+
     @property
     def allowed_doc_types_list(self) -> list[str]:
         return [t.strip() for t in self.ALLOWED_DOC_TYPES.split(",") if t.strip()]

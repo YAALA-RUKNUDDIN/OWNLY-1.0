@@ -52,7 +52,7 @@ def auth_headers(client):
     suffix = uuid.uuid4().hex[:8]
     resp = client.post("/api/v1/auth/register", json={
         "name": "Test User",
-        "email": f"user_{suffix}@example.com",
+        "email": f"user_{suffix}@ownlymail.com",
         "password": "strongpassword1",
     })
     assert resp.status_code == 201, resp.text
@@ -66,7 +66,7 @@ def second_auth_headers(client):
     suffix = uuid.uuid4().hex[:8]
     resp = client.post("/api/v1/auth/register", json={
         "name": "Other User",
-        "email": f"other_{suffix}@example.com",
+        "email": f"other_{suffix}@ownlymail.com",
         "password": "strongpassword1",
     })
     assert resp.status_code == 201, resp.text

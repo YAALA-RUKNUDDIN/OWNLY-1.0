@@ -6,11 +6,14 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from app.api.deps import PaginationParams, get_current_user
+from app.core.analytics_events import AnalyticsEvent
 from app.core.database import get_db
 from app.core.errors import NotFoundError, ValidationError
+from app.integrations.analytics import track
 from app.models import EventType, Product, ProductStatus, User
 from app.repositories.product_repo import ProductRepository
 from app.schemas.product import ProductCreate, ProductListOut, ProductOut, ProductUpdate
+from app.services.subscription_service import enforce_product_quota
 from app.services.timeline_service import record_event
 from app.services.warranty_service import compute_return_status, compute_warranty_status
 
@@ -74,6 +77,7 @@ def create_product(
         "gaming", "other",
     ]:
         raise ValidationError("Unknown category.", {"fields": {"category": f"must be one of the supported categories"}})
+    enforce_product_quota(db, user)
     repo = ProductRepository(db, user.id)
     product = repo.create(**body.model_dump())
     record_event(
@@ -84,6 +88,7 @@ def create_product(
     )
     db.commit()
     db.refresh(product)
+    track(AnalyticsEvent.product_added, user.id, {"category": product.category})
     return _serialize(db, product)
 
 
@@ -136,4 +141,5 @@ def delete_product(
         raise NotFoundError("Product not found.")
     ProductRepository(db, user.id).soft_delete(product)
     db.commit()
+    track(AnalyticsEvent.product_deleted, user.id)
     return None

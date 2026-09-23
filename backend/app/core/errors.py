@@ -51,6 +51,12 @@ class StorageError(AppError):
     code = "storage_error"
 
 
+class PlanLimitError(ForbiddenError):
+    """Request exceeds the user's current plan entitlement (e.g. the free
+    tier product cap). Clients show an upgrade prompt on this code."""
+    code = "plan_limit_reached"
+
+
 class OCRError(AppError):
     status_code = status.HTTP_502_BAD_GATEWAY
     code = "ocr_error"

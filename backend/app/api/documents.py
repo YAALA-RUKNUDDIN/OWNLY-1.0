@@ -6,9 +6,11 @@ from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user
+from app.core.analytics_events import AnalyticsEvent
 from app.core.config import settings
 from app.core.database import get_db
 from app.core.errors import NotFoundError, StorageError, ValidationError
+from app.integrations.analytics import track
 from app.integrations.storage import get_storage
 from app.models import Document, DocumentType, EventType, User
 from app.repositories.document_repo import DocumentRepository
@@ -90,6 +92,7 @@ async def upload_document(
     )
     db.commit()
     db.refresh(doc)
+    track(AnalyticsEvent.document_uploaded, user.id, {"document_type": document_type.value})
     return doc
 
 

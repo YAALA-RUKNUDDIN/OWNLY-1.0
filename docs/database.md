@@ -78,7 +78,22 @@ service_completed, …). Index: `ix_timeline_product_date`.
 ### notification_log
 Idempotency guard for the daily worker: unique
 `(user_id, subject_type, subject_id, milestone, due_date)` — a duplicate scan
-run can never re-send a push (notification-fatigue protection).
+run can never re-send a push (notification-fatigue protection). It also backs
+the user-facing history endpoint (`GET /notifications`), so no separate table
+is needed.
+
+### subscriptions
+One row per user (created lazily by `subscription_service.get_or_create`, so
+existing accounts need no backfill). `tier` enum: free | premium.
+`status` enum: active | canceled | expired. `provider` records how the tier
+was granted (`none` default, `manual` for dev/admin grants, store identifiers
+later); `provider_ref` holds the receipt/transaction id.
+`expires_at` null on a premium row = non-expiring grant.
+
+**Entitlement is never stored as a boolean** — it is computed at read time by
+`effective_tier(tier, status, expires_at)`, so an elapsed premium period
+degrades to free automatically and can never serve stale access.
+Index: `ix_subscriptions_user_id` (unique).
 
 ---
 
@@ -93,13 +108,16 @@ users 1─┬─N products 1─┬─N warranties        (CASCADE)
         │              └─N timeline_events   (CASCADE)
         ├─N refresh_tokens                 (CASCADE)
         ├─N device_tokens                  (CASCADE)
-        └─N notification_preferences       (CASCADE)
+        ├─N notification_preferences       (CASCADE)
+        └─1 subscriptions                  (CASCADE)
 documents.user_id → users.id                (CASCADE)
 ```
 
 Deleting a user (account deletion) cascades everything — no orphaned data.
 Deleting a product soft-deletes it; hard delete happens only via account
-deletion, preserving the audit story.
+deletion, preserving the audit story. SQLite runs with `PRAGMA foreign_keys=ON`
+(engine-level, `database.py`) so those cascades are genuinely enforced in
+dev/test exactly as in PostgreSQL.
 
 ## Design Decisions
 

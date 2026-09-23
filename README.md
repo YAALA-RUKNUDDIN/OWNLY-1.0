@@ -49,6 +49,8 @@ Key guarantees:
 - **No duplicate notifications** — `notification_log` unique constraint makes the daily scan idempotent.
 - **OCR is a draft** — extraction is returned for user review/editing; nothing auto-saves.
 - **Privacy-first** — private storage + signed URLs, full data export, permanent account & document deletion.
+- **Honest monetization** — entitlement is computed from `tier`/`status`/`expires_at` at read time, so a lapsed premium can never keep access; the free cap is enforced server-side (`plan_limit_reached`), not just in the UI.
+- **Observable, never brittle** — analytics events go through a provider abstraction that swallows its own errors; Sentry is opt-in via `SENTRY_DSN` and degrades to a no-op.
 
 ## Manual start (backend)
 
@@ -109,24 +111,28 @@ Base path `/api/v1`. Uniform error envelope:
 | Repairs/Service | `POST/GET /products/{id}/repairs`, `POST/GET /products/{id}/service-records` |
 | Timeline | `GET /products/{id}/timeline` |
 | Reminders | `GET/POST /reminders`, `PATCH/DELETE /reminders/{id}` |
-| Today | `GET /dashboard/today` — attention / upcoming / recently added / stats |
+| Today | `GET /dashboard/today` and `GET /today` (alias, identical payload) — attention / upcoming / recently added / stats |
 | OCR | `POST /ocr/extract` — returns editable draft, saves nothing |
 | User | `PATCH /users/me`, `GET/PATCH /users/me/prefs`, `POST /users/me/devices`, `GET /users/me/export`, `DELETE /users/me` |
-| Admin | `GET /admin/stats` (admin-only aggregate stats) |
+| Subscription | `GET /subscription` (tier, limits, usage), `POST /subscription/activate` (dev/admin; store receipts later), `POST /subscription/cancel` |
+| Notifications | `GET /notifications` — paginated history, `category` / `subject_type` filters |
+| Admin | `GET /admin/stats` (admin-only aggregate stats incl. premium subscriptions) |
 
 ## Verification status (re-executed 2026-09-23, this machine)
 
-- ✅ **`pytest`: 64/64 passed** (SQLite runner: `backend/_check_import.py`) **and
-  64/64 passed on PostgreSQL 16** (`TEST_DATABASE_URL` → Docker Postgres on
+- ✅ **`pytest`: 100/100 passed** (SQLite runner: `backend/_check_import.py`) **and
+  100/100 passed on PostgreSQL 16** (`TEST_DATABASE_URL` → Docker Postgres on
   host port 5433). Covers auth
   rotation + reuse detection, user isolation, warranty boundary math, documents
-  signed-URL round-trip, export, account deletion, worker idempotency, and 16 new
-  unit tests for the TodayService classifiers (buckets, severity, date math).
+  signed-URL round-trip, export, account deletion, worker idempotency, plan
+  gating (free cap, soft-delete frees quota, premium unlimited), subscription
+  lifecycle, notification history, and the TodayService classifier unit tests.
 - ✅ **Live server boot verified**: `uvicorn app.main:app` → `/health` returns
   `{"status":"ok","app":"OWNLY"}`; live register → create product →
   `GET /dashboard/today` flow executed successfully.
-- ✅ **Alembic baseline migration** (`migrations/versions/5c72b958547c_baseline.py`)
-  verified: `upgrade head → downgrade base → upgrade head` round-trip passes.
+- ✅ **Alembic migrations** verified on PostgreSQL: baseline + `add_subscriptions`
+  round-trip `upgrade head → downgrade base → upgrade head`, and `alembic check`
+  reports *no new upgrade operations* (migration exactly matches the ORM).
 - ✅ **Import audit**: every module under `app/` imports cleanly (SQLite mode).
 - ⚠ Flutter codebase requires the Flutter SDK (not installed on this machine) to
   build/run — platform scaffolding is scheduled for Phase 3.

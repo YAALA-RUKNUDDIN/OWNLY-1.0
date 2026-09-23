@@ -4,8 +4,10 @@ import uuid
 from sqlalchemy import select
 from sqlalchemy.orm import Session, joinedload
 
+from app.core.datetime_utils import utc_now
 from app.models import (
-    Document, Product, Reminder, Repair, ServiceRecord, TimelineEvent, User, Warranty,
+    Document, NotificationLog, Product, Reminder, Repair, ServiceRecord,
+    Subscription, TimelineEvent, User, Warranty,
 )
 
 
@@ -28,12 +30,35 @@ def build_export(db: Session, user_id: uuid.UUID) -> dict:
         .all()
     )
 
+    subscription = db.scalar(select(Subscription).where(Subscription.user_id == user_id))
+    notifications = (
+        db.execute(
+            select(NotificationLog)
+            .where(NotificationLog.user_id == user_id)
+            .order_by(NotificationLog.sent_at.desc())
+        )
+        .scalars()
+        .all()
+    )
+
     def iso(d):
         return d.isoformat() if d else None
 
     return {
-        "exported_at": __import__("datetime").datetime.now(__import__("datetime").timezone.utc).isoformat(),
+        "exported_at": utc_now().isoformat(),
         "profile": {"id": str(user_id)},
+        "subscription": None if subscription is None else {
+            "tier": subscription.tier.value,
+            "status": subscription.status.value,
+            "provider": subscription.provider,
+            "started_at": iso(subscription.started_at),
+            "expires_at": iso(subscription.expires_at),
+        },
+        "notifications": [
+            {"category": n.category.value, "title": n.title, "body": n.body,
+             "milestone": n.milestone, "due_date": iso(n.due_date), "sent_at": iso(n.sent_at)}
+            for n in notifications
+        ],
         "products": [
             {
                 "name": p.name,
