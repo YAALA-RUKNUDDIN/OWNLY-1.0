@@ -114,11 +114,22 @@ Base path `/api/v1`. Uniform error envelope:
 | User | `PATCH /users/me`, `GET/PATCH /users/me/prefs`, `POST /users/me/devices`, `GET /users/me/export`, `DELETE /users/me` |
 | Admin | `GET /admin/stats` (admin-only aggregate stats) |
 
-## Verification status (executed on this machine)
+## Verification status (re-executed 2026-09-23, this machine)
 
-- ✅ **Live local server: running on http://localhost:8000 (SQLite mode)** — smoke test **16/16 checks passed**: register, wrong-password rejection, login, product create, return-window tracking, warranty (12 mo → 2027-09-01, active), timeline events, dashboard stats, reminder, export, refresh rotation, refresh reuse rejection, unauthenticated 401.
-- ✅ **`pytest`: 62/62 passed** (earlier, in Docker against PostgreSQL). Covers auth rotation + reuse detection, user isolation, warranty boundary math, documents round-trip, worker idempotency and more.
-- ⚠ Flutter codebase is complete but requires the Flutter SDK to build/run (not installed on this machine).
+- ✅ **`pytest`: 63/63 passed** (SQLite runner: `backend/_check_import.py`). Covers auth
+  rotation + reuse detection, user isolation, warranty boundary math, documents
+  signed-URL round-trip, export, account deletion, worker idempotency, and 16 new
+  unit tests for the TodayService classifiers (buckets, severity, date math).
+- ✅ **Live server boot verified**: `uvicorn app.main:app` → `/health` returns
+  `{"status":"ok","app":"OWNLY"}`; live register → create product →
+  `GET /dashboard/today` flow executed successfully.
+- ✅ **Alembic baseline migration** (`migrations/versions/5c72b958547c_baseline.py`)
+  verified: `upgrade head → downgrade base → upgrade head` round-trip passes.
+- ✅ **Import audit**: every module under `app/` imports cleanly (SQLite mode).
+- ⚠ Flutter codebase requires the Flutter SDK (not installed on this machine) to
+  build/run — platform scaffolding is scheduled for Phase 3.
+- 🐳 Docker daemon was unavailable during this run; PostgreSQL-parity test runs
+  (`TEST_DATABASE_URL=...`) should be executed when Docker is available.
 
 ## Roadmap (designed-for, not yet built)
 
