@@ -68,6 +68,7 @@ class OwnlyRepository {
   Future<List<Product>> products({
     String? search, String? category, String? status,
     String? warrantyStatus, int? purchaseYear,
+    String? scope,
   }) async {
     try {
       final resp = await api.dio.get('/products', queryParameters: {
@@ -76,6 +77,7 @@ class OwnlyRepository {
         if (status != null && status.isNotEmpty) 'status': status,
         if (warrantyStatus != null && warrantyStatus.isNotEmpty) 'warranty_status': warrantyStatus,
         if (purchaseYear != null) 'purchase_year': purchaseYear,
+        if (scope != null && scope.isNotEmpty) 'scope': scope,
         'page_size': 100,
       });
       final items = (resp.data['items'] as List).cast<Map<String, dynamic>>();
@@ -97,6 +99,18 @@ class OwnlyRepository {
   Future<Product> createProduct(Map<String, dynamic> body) async {
     try {
       final resp = await api.dio.post('/products', data: body);
+      return Product.fromJson(resp.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      throw ApiClient.toError(e);
+    }
+  }
+
+  Future<Product> shareProduct(String productId, String? householdId) async {
+    try {
+      final resp = await api.dio.post(
+        '/products/$productId/share',
+        data: {'household_id': householdId},
+      );
       return Product.fromJson(resp.data as Map<String, dynamic>);
     } on DioException catch (e) {
       throw ApiClient.toError(e);
@@ -373,4 +387,105 @@ class OwnlyRepository {
 
 final repositoryProvider = Provider<OwnlyRepository>(
   (ref) => OwnlyRepository(ref.watch(apiClientProvider), ref.watch(tokenStorageProvider)),
+);
+
+/// Repository for household management, invites, and RBAC sharing.
+class HouseholdRepository {
+  final ApiClient api;
+  HouseholdRepository(this.api);
+
+  Future<List<HouseholdItem>> listHouseholds() async {
+    try {
+      final resp = await api.dio.get('/households');
+      final items = (resp.data as List).cast<Map<String, dynamic>>();
+      return items.map(HouseholdItem.fromJson).toList();
+    } on DioException catch (e) {
+      throw ApiClient.toError(e);
+    }
+  }
+
+  Future<HouseholdDetailItem> getHousehold(String id) async {
+    try {
+      final resp = await api.dio.get('/households/$id');
+      return HouseholdDetailItem.fromJson(resp.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      throw ApiClient.toError(e);
+    }
+  }
+
+  Future<HouseholdItem> createHousehold(String name) async {
+    try {
+      final resp = await api.dio.post('/households', data: {'name': name});
+      return HouseholdItem.fromJson(resp.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      throw ApiClient.toError(e);
+    }
+  }
+
+  Future<HouseholdInviteItem> createInvite(
+    String householdId, {
+    String role = 'member',
+    int expiresInDays = 7,
+  }) async {
+    try {
+      final resp = await api.dio.post(
+        '/households/$householdId/invites',
+        data: {'role': role, 'expires_in_days': expiresInDays},
+      );
+      return HouseholdInviteItem.fromJson(resp.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      throw ApiClient.toError(e);
+    }
+  }
+
+  Future<List<HouseholdInviteItem>> listInvites(String householdId) async {
+    try {
+      final resp = await api.dio.get('/households/$householdId/invites');
+      final items = (resp.data as List).cast<Map<String, dynamic>>();
+      return items.map(HouseholdInviteItem.fromJson).toList();
+    } on DioException catch (e) {
+      throw ApiClient.toError(e);
+    }
+  }
+
+  Future<HouseholdDetailItem> joinHousehold(String inviteCode) async {
+    try {
+      final resp = await api.dio.post('/households/join', data: {'invite_code': inviteCode});
+      return HouseholdDetailItem.fromJson(resp.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      throw ApiClient.toError(e);
+    }
+  }
+
+  Future<void> removeMember(String householdId, String userId) async {
+    try {
+      await api.dio.delete('/households/$householdId/members/$userId');
+    } on DioException catch (e) {
+      throw ApiClient.toError(e);
+    }
+  }
+
+  Future<Product> shareProduct(String productId, String? householdId) async {
+    try {
+      final resp = await api.dio.post(
+        '/products/$productId/share',
+        data: {'household_id': householdId},
+      );
+      return Product.fromJson(resp.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      throw ApiClient.toError(e);
+    }
+  }
+
+  Future<void> deleteHousehold(String householdId) async {
+    try {
+      await api.dio.delete('/households/$householdId');
+    } on DioException catch (e) {
+      throw ApiClient.toError(e);
+    }
+  }
+}
+
+final householdRepositoryProvider = Provider<HouseholdRepository>(
+  (ref) => HouseholdRepository(ref.watch(apiClientProvider)),
 );

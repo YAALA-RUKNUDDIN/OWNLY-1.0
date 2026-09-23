@@ -7,13 +7,25 @@ class ProductsFilter {
   final String search;
   final String category;
   final String warrantyStatus;
-  const ProductsFilter({this.search = '', this.category = '', this.warrantyStatus = ''});
+  final String scope;
+  const ProductsFilter({
+    this.search = '',
+    this.category = '',
+    this.warrantyStatus = '',
+    this.scope = '',
+  });
 
-  ProductsFilter copyWith({String? search, String? category, String? warrantyStatus}) =>
+  ProductsFilter copyWith({
+    String? search,
+    String? category,
+    String? warrantyStatus,
+    String? scope,
+  }) =>
       ProductsFilter(
         search: search ?? this.search,
         category: category ?? this.category,
         warrantyStatus: warrantyStatus ?? this.warrantyStatus,
+        scope: scope ?? this.scope,
       );
 }
 
@@ -31,6 +43,7 @@ class ProductsController extends StateNotifier<AsyncValue<List<Product>>> {
         search: _filter.search,
         category: _filter.category,
         warrantyStatus: _filter.warrantyStatus,
+        scope: _filter.scope,
       );
       state = AsyncValue.data(items);
     } catch (e, st) {

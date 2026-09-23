@@ -58,6 +58,8 @@ class Product {
   final WarrantyInfo warranty;
   final ReturnWindow returnWindow;
   final DateTime createdAt;
+  final String? householdId;
+  final bool isShared;
 
   Product({
     required this.id,
@@ -75,6 +77,8 @@ class Product {
     required this.warranty,
     required this.returnWindow,
     required this.createdAt,
+    this.householdId,
+    this.isShared = false,
   });
 
   factory Product.fromJson(Map<String, dynamic> j) => Product(
@@ -93,6 +97,8 @@ class Product {
         warranty: WarrantyInfo.fromJson(j['warranty'] as Map<String, dynamic>),
         returnWindow: ReturnWindow.fromJson(j['return_window'] as Map<String, dynamic>),
         createdAt: DateTime.parse(j['created_at'] as String),
+        householdId: j['household_id'] as String?,
+        isShared: (j['is_shared'] ?? false) as bool,
       );
 }
 
@@ -470,5 +476,123 @@ class RepairEntry {
         provider: j['provider'] as String?,
         cost: j['cost'] as num?,
         notes: j['notes'] as String?,
+      );
+}
+
+/// Household summary in GET /households.
+class HouseholdItem {
+  final String id;
+  final String name;
+  final String createdBy;
+  final int memberCount;
+  final String role; // 'admin' | 'member' | 'viewer'
+  final DateTime createdAt;
+
+  const HouseholdItem({
+    required this.id,
+    required this.name,
+    required this.createdBy,
+    required this.memberCount,
+    required this.role,
+    required this.createdAt,
+  });
+
+  factory HouseholdItem.fromJson(Map<String, dynamic> j) => HouseholdItem(
+        id: j['id'] as String,
+        name: (j['name'] ?? '') as String,
+        createdBy: j['created_by'] as String,
+        memberCount: (j['member_count'] ?? 1) as int,
+        role: (j['role'] ?? 'member') as String,
+        createdAt: DateTime.parse(j['created_at'] as String),
+      );
+}
+
+/// Household member row in GET /households/{id}.
+class HouseholdMemberItem {
+  final String userId;
+  final String userName;
+  final String userEmail;
+  final String role; // 'admin' | 'member' | 'viewer'
+  final DateTime joinedAt;
+
+  const HouseholdMemberItem({
+    required this.userId,
+    required this.userName,
+    required this.userEmail,
+    required this.role,
+    required this.joinedAt,
+  });
+
+  factory HouseholdMemberItem.fromJson(Map<String, dynamic> j) => HouseholdMemberItem(
+        userId: j['user_id'] as String,
+        userName: (j['user_name'] ?? '') as String,
+        userEmail: (j['user_email'] ?? '') as String,
+        role: (j['role'] ?? 'member') as String,
+        joinedAt: DateTime.parse(j['joined_at'] as String),
+      );
+}
+
+/// Detailed household with member list in GET /households/{id}.
+class HouseholdDetailItem {
+  final String id;
+  final String name;
+  final String createdBy;
+  final String role;
+  final int productCount;
+  final DateTime createdAt;
+  final List<HouseholdMemberItem> members;
+
+  const HouseholdDetailItem({
+    required this.id,
+    required this.name,
+    required this.createdBy,
+    required this.role,
+    required this.productCount,
+    required this.createdAt,
+    required this.members,
+  });
+
+  factory HouseholdDetailItem.fromJson(Map<String, dynamic> j) => HouseholdDetailItem(
+        id: j['id'] as String,
+        name: (j['name'] ?? '') as String,
+        createdBy: j['created_by'] as String,
+        role: (j['role'] ?? 'member') as String,
+        productCount: (j['product_count'] ?? 0) as int,
+        createdAt: DateTime.parse(j['created_at'] as String),
+        members: ((j['members'] ?? const <dynamic>[]) as List)
+            .cast<Map<String, dynamic>>()
+            .map(HouseholdMemberItem.fromJson)
+            .toList(),
+      );
+}
+
+/// Household invite representation.
+class HouseholdInviteItem {
+  final String id;
+  final String householdId;
+  final String code;
+  final String role;
+  final DateTime expiresAt;
+  final DateTime? usedAt;
+  final DateTime createdAt;
+
+  const HouseholdInviteItem({
+    required this.id,
+    required this.householdId,
+    required this.code,
+    required this.role,
+    required this.expiresAt,
+    this.usedAt,
+    required this.createdAt,
+  });
+
+  factory HouseholdInviteItem.fromJson(Map<String, dynamic> j) => HouseholdInviteItem(
+        id: j['id'] as String,
+        householdId: j['household_id'] as String,
+        code: j['code'] as String,
+        role: (j['role'] ?? 'member') as String,
+        expiresAt: DateTime.parse(j['expires_at'] as String),
+        usedAt: j['used_at'] != null ? DateTime.tryParse(j['used_at'] as String) : null,
+        createdAt: DateTime.parse(j['created_at'] as String),
       );
 }
