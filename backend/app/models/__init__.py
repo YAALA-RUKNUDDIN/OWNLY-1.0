@@ -9,12 +9,16 @@ from app.models.document import Document, DocumentType
 from app.models.reminder import Reminder, ReminderStatus, ReminderType
 from app.models.service_record import ServiceRecord
 from app.models.repair import Repair
+from app.models.household import (
+    Household, HouseholdMember, HouseholdInvite, HouseholdRole,
+)
 from app.models.timeline_event import TimelineEvent, EventType
 from app.models.notification_log import NotificationLog
 
 __all__ = [
     "User", "RefreshToken", "DeviceToken", "NotificationCategory", "NotificationPreference",
     "PlanTier", "Subscription", "SubscriptionStatus",
+    "Household", "HouseholdMember", "HouseholdInvite", "HouseholdRole",
     "Product", "ProductStatus",
     "Warranty", "WarrantyType",
     "Document", "DocumentType",

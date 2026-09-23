@@ -25,6 +25,9 @@ class Product(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(GUID, primary_key=True, default=generate_uuid)
     user_id: Mapped[uuid.UUID] = mapped_column(GUID, ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False)
+    household_id: Mapped[uuid.UUID | None] = mapped_column(
+        GUID, ForeignKey("households.id", ondelete="SET NULL"), index=True, nullable=True
+    )
 
     name: Mapped[str] = mapped_column(String(200), nullable=False)
     brand: Mapped[str | None] = mapped_column(String(120))
@@ -51,6 +54,7 @@ class Product(Base):
     updated_at: Mapped[object] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
     owner: Mapped["User"] = relationship(back_populates="products")
+    household: Mapped["Household | None"] = relationship(back_populates="products")
     warranties: Mapped[list["Warranty"]] = relationship(back_populates="product", cascade="all, delete-orphan")
     documents: Mapped[list["Document"]] = relationship(back_populates="product", cascade="all, delete-orphan")
     reminders: Mapped[list["Reminder"]] = relationship(back_populates="product", cascade="all, delete-orphan")
