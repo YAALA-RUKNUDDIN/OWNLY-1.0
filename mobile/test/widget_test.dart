@@ -48,6 +48,7 @@ class _FakeRepository extends OwnlyRepository {
     String? status,
     String? warrantyStatus,
     int? purchaseYear,
+    String? scope,
   }) async =>
       const [];
 
