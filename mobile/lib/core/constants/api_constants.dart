@@ -25,6 +25,7 @@ class OwnlyRoutes {
   static const dataExport = '/export';
   static const households = '/households';
   static const claims = '/claims';
+  static const portfolio = '/portfolio';
 
   static String productPath(String id) => '/products/$id';
   static String claimPath(String id) => '/claims/$id';

@@ -87,3 +87,16 @@ class OwnlyTheme {
     );
   }
 }
+
+/// Curated color tokens for semantic cards, statuses, borders and text.
+class OwnlyColors {
+  static const surface = OwnlyTheme.surface;
+  static const card = Colors.white;
+  static const border = Color(0xFFE7EAF1);
+  static const emerald = Color(0xFF10B981);
+  static const textPrimary = OwnlyTheme.ink;
+  static const textSecondary = OwnlyTheme.muted;
+  static const error = OwnlyTheme.danger;
+  static const warning = OwnlyTheme.warning;
+  static const primary = OwnlyTheme.seed;
+}

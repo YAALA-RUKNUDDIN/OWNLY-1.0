@@ -20,6 +20,7 @@ import 'package:ownly/features/shell/home_shell.dart';
 import 'package:ownly/features/subscription/subscription_screen.dart';
 import 'package:ownly/features/claims/claims_screen.dart';
 import 'package:ownly/features/claims/claim_detail_screen.dart';
+import 'package:ownly/features/resale/portfolio_analytics_screen.dart';
 
 /// Global navigator key for notification tap-through and dialogs outside BuildContext.
 final rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'root');
@@ -128,6 +129,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => ClaimDetailScreen(
           claimId: state.pathParameters['id']!,
         ),
+      ),
+      GoRoute(
+        path: OwnlyRoutes.portfolio,
+        builder: (context, state) => const PortfolioAnalyticsScreen(),
       ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, shell) => HomeShell(shell: shell),

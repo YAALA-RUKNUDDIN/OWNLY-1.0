@@ -636,3 +636,101 @@ class ClaimRepository {
 final claimRepositoryProvider = Provider<ClaimRepository>(
   (ref) => ClaimRepository(ref.watch(apiClientProvider)),
 );
+
+// ---------------------------------------------------------------------------
+// Phase 10: Resale & Valuation Repository
+// ---------------------------------------------------------------------------
+
+class ResaleRepository {
+  final ApiClient api;
+  ResaleRepository(this.api);
+
+  Future<ProductValuationItem> getValuation(String productId) async {
+    try {
+      final resp = await api.dio.get('/products/$productId/valuation');
+      return ProductValuationItem.fromJson(resp.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      throw ApiClient.toError(e);
+    }
+  }
+
+  Future<ResaleListingPacketItem> getResalePacket(String productId) async {
+    try {
+      final resp = await api.dio.get('/products/$productId/resale-packet');
+      return ResaleListingPacketItem.fromJson(resp.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      throw ApiClient.toError(e);
+    }
+  }
+
+  Future<ProductValuationItem> sellProduct(
+    String productId, {
+    required double resalePrice,
+    DateTime? resaleDate,
+    String? resalePlatform,
+    String? resaleNotes,
+    String? condition,
+  }) async {
+    try {
+      final resp = await api.dio.post(
+        '/products/$productId/sell',
+        data: {
+          'resale_price': resalePrice,
+          if (resaleDate != null) 'resale_date': resaleDate.toIso8601String(),
+          if (resalePlatform != null && resalePlatform.isNotEmpty) 'resale_platform': resalePlatform,
+          if (resaleNotes != null && resaleNotes.isNotEmpty) 'resale_notes': resaleNotes,
+          if (condition != null) 'condition': condition,
+        },
+      );
+      return ProductValuationItem.fromJson(resp.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      throw ApiClient.toError(e);
+    }
+  }
+
+  Future<ProductValuationItem> disposeProduct(
+    String productId, {
+    required String disposalType,
+    DateTime? disposalDate,
+    String? notes,
+  }) async {
+    try {
+      final resp = await api.dio.post(
+        '/products/$productId/dispose',
+        data: {
+          'disposal_type': disposalType,
+          if (disposalDate != null) 'disposal_date': disposalDate.toIso8601String(),
+          if (notes != null && notes.isNotEmpty) 'notes': notes,
+        },
+      );
+      return ProductValuationItem.fromJson(resp.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      throw ApiClient.toError(e);
+    }
+  }
+
+  Future<ProductValuationItem> updateCondition(String productId, String condition) async {
+    try {
+      final resp = await api.dio.patch(
+        '/products/$productId/condition',
+        queryParameters: {'condition': condition},
+      );
+      return ProductValuationItem.fromJson(resp.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      throw ApiClient.toError(e);
+    }
+  }
+
+  Future<PortfolioAnalyticsItem> getPortfolioAnalytics() async {
+    try {
+      final resp = await api.dio.get('/portfolio/analytics');
+      return PortfolioAnalyticsItem.fromJson(resp.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      throw ApiClient.toError(e);
+    }
+  }
+}
+
+final resaleRepositoryProvider = Provider<ResaleRepository>(
+  (ref) => ResaleRepository(ref.watch(apiClientProvider)),
+);

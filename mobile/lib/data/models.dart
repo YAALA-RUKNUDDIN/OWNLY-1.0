@@ -60,6 +60,11 @@ class Product {
   final DateTime createdAt;
   final String? householdId;
   final bool isShared;
+  final String condition;
+  final num? resalePrice;
+  final DateTime? resaleDate;
+  final String? resalePlatform;
+  final String? resaleNotes;
 
   Product({
     required this.id,
@@ -79,6 +84,11 @@ class Product {
     required this.createdAt,
     this.householdId,
     this.isShared = false,
+    this.condition = 'good',
+    this.resalePrice,
+    this.resaleDate,
+    this.resalePlatform,
+    this.resaleNotes,
   });
 
   factory Product.fromJson(Map<String, dynamic> j) => Product(
@@ -99,6 +109,11 @@ class Product {
         createdAt: DateTime.parse(j['created_at'] as String),
         householdId: j['household_id'] as String?,
         isShared: (j['is_shared'] ?? false) as bool,
+        condition: (j['condition'] ?? 'good') as String,
+        resalePrice: j['resale_price'] as num?,
+        resaleDate: j['resale_date'] != null ? DateTime.tryParse(j['resale_date'] as String) : null,
+        resalePlatform: j['resale_platform'] as String?,
+        resaleNotes: j['resale_notes'] as String?,
       );
 }
 
@@ -744,5 +759,234 @@ class ClaimDossierItem {
             : null,
         claimant: (j['claimant'] ?? const <String, dynamic>{}) as Map<String, dynamic>,
         formattedMarkdown: (j['formatted_markdown'] ?? '') as String,
+      );
+}
+
+// ---------------------------------------------------------------------------
+// Phase 10: Resale & Valuation Models
+// ---------------------------------------------------------------------------
+
+class PriceRangeItem {
+  final double low;
+  final double fair;
+  final double high;
+
+  const PriceRangeItem({required this.low, required this.fair, required this.high});
+
+  factory PriceRangeItem.fromJson(Map<String, dynamic> j) => PriceRangeItem(
+        low: (j['low'] as num).toDouble(),
+        fair: (j['fair'] as num).toDouble(),
+        high: (j['high'] as num).toDouble(),
+      );
+}
+
+class ProductValuationItem {
+  final String productId;
+  final String productName;
+  final String? brand;
+  final String category;
+  final String condition;
+  final DateTime purchaseDate;
+  final double? purchasePrice;
+  final String currency;
+  final int daysOwned;
+  final double? estimatedResaleValue;
+  final double? valueRetentionPercent;
+  final double totalRepairsCost;
+  final double? netCostOfOwnership;
+  final double? costPerDay;
+  final double? depreciationAmount;
+  final double annualDepreciationRate;
+  final PriceRangeItem? suggestedListingPriceRange;
+  final bool isSold;
+  final double? actualResalePrice;
+  final double? realizedNetCost;
+
+  const ProductValuationItem({
+    required this.productId,
+    required this.productName,
+    this.brand,
+    required this.category,
+    required this.condition,
+    required this.purchaseDate,
+    this.purchasePrice,
+    required this.currency,
+    required this.daysOwned,
+    this.estimatedResaleValue,
+    this.valueRetentionPercent,
+    required this.totalRepairsCost,
+    this.netCostOfOwnership,
+    this.costPerDay,
+    this.depreciationAmount,
+    required this.annualDepreciationRate,
+    this.suggestedListingPriceRange,
+    required this.isSold,
+    this.actualResalePrice,
+    this.realizedNetCost,
+  });
+
+  factory ProductValuationItem.fromJson(Map<String, dynamic> j) => ProductValuationItem(
+        productId: j['product_id'] as String,
+        productName: j['product_name'] as String,
+        brand: j['brand'] as String?,
+        category: j['category'] as String,
+        condition: (j['condition'] ?? 'good') as String,
+        purchaseDate: DateTime.parse(j['purchase_date'] as String),
+        purchasePrice: j['purchase_price'] != null ? (j['purchase_price'] as num).toDouble() : null,
+        currency: (j['currency'] ?? 'USD') as String,
+        daysOwned: (j['days_owned'] as num).toInt(),
+        estimatedResaleValue: j['estimated_resale_value'] != null ? (j['estimated_resale_value'] as num).toDouble() : null,
+        valueRetentionPercent: j['value_retention_percent'] != null ? (j['value_retention_percent'] as num).toDouble() : null,
+        totalRepairsCost: (j['total_repairs_cost'] as num? ?? 0.0).toDouble(),
+        netCostOfOwnership: j['net_cost_of_ownership'] != null ? (j['net_cost_of_ownership'] as num).toDouble() : null,
+        costPerDay: j['cost_per_day'] != null ? (j['cost_per_day'] as num).toDouble() : null,
+        depreciationAmount: j['depreciation_amount'] != null ? (j['depreciation_amount'] as num).toDouble() : null,
+        annualDepreciationRate: (j['annual_depreciation_rate'] as num? ?? 0.0).toDouble(),
+        suggestedListingPriceRange: j['suggested_listing_price_range'] != null
+            ? PriceRangeItem.fromJson(j['suggested_listing_price_range'] as Map<String, dynamic>)
+            : null,
+        isSold: (j['is_sold'] ?? false) as bool,
+        actualResalePrice: j['actual_resale_price'] != null ? (j['actual_resale_price'] as num).toDouble() : null,
+        realizedNetCost: j['realized_net_cost'] != null ? (j['realized_net_cost'] as num).toDouble() : null,
+      );
+}
+
+class ResaleDocumentItem {
+  final String name;
+  final String type;
+  final String downloadUrl;
+
+  const ResaleDocumentItem({required this.name, required this.type, required this.downloadUrl});
+
+  factory ResaleDocumentItem.fromJson(Map<String, dynamic> j) => ResaleDocumentItem(
+        name: j['name'] as String,
+        type: j['type'] as String,
+        downloadUrl: j['download_url'] as String,
+      );
+}
+
+class ResaleRepairItem {
+  final String? repairDate;
+  final String? repairVendor;
+  final String? description;
+  final double? cost;
+
+  const ResaleRepairItem({this.repairDate, this.repairVendor, this.description, this.cost});
+
+  factory ResaleRepairItem.fromJson(Map<String, dynamic> j) => ResaleRepairItem(
+        repairDate: j['repair_date'] as String?,
+        repairVendor: j['repair_vendor'] as String?,
+        description: j['description'] as String?,
+        cost: j['cost'] != null ? (j['cost'] as num).toDouble() : null,
+      );
+}
+
+class ResaleListingPacketItem {
+  final String productId;
+  final String title;
+  final double? suggestedPrice;
+  final PriceRangeItem? suggestedPriceRange;
+  final String condition;
+  final Map<String, dynamic> specifications;
+  final List<ResaleRepairItem> repairHistory;
+  final List<ResaleDocumentItem> verifiedDocuments;
+  final String formattedMarkdown;
+  final String plainTextDescription;
+
+  const ResaleListingPacketItem({
+    required this.productId,
+    required this.title,
+    this.suggestedPrice,
+    this.suggestedPriceRange,
+    required this.condition,
+    required this.specifications,
+    this.repairHistory = const [],
+    this.verifiedDocuments = const [],
+    required this.formattedMarkdown,
+    required this.plainTextDescription,
+  });
+
+  factory ResaleListingPacketItem.fromJson(Map<String, dynamic> j) => ResaleListingPacketItem(
+        productId: j['product_id'] as String,
+        title: j['title'] as String,
+        suggestedPrice: j['suggested_price'] != null ? (j['suggested_price'] as num).toDouble() : null,
+        suggestedPriceRange: j['suggested_price_range'] != null
+            ? PriceRangeItem.fromJson(j['suggested_price_range'] as Map<String, dynamic>)
+            : null,
+        condition: (j['condition'] ?? 'good') as String,
+        specifications: (j['specifications'] ?? const <String, dynamic>{}) as Map<String, dynamic>,
+        repairHistory: (j['repair_history'] as List? ?? const [])
+            .map((r) => ResaleRepairItem.fromJson(r as Map<String, dynamic>))
+            .toList(),
+        verifiedDocuments: (j['verified_documents'] as List? ?? const [])
+            .map((d) => ResaleDocumentItem.fromJson(d as Map<String, dynamic>))
+            .toList(),
+        formattedMarkdown: (j['formatted_markdown'] ?? '') as String,
+        plainTextDescription: (j['plain_text_description'] ?? '') as String,
+      );
+}
+
+class CategoryValueBreakdownItem {
+  final String category;
+  final int productCount;
+  final double totalPurchaseValue;
+  final double totalEstimatedResaleValue;
+  final double retentionPercent;
+
+  const CategoryValueBreakdownItem({
+    required this.category,
+    required this.productCount,
+    required this.totalPurchaseValue,
+    required this.totalEstimatedResaleValue,
+    required this.retentionPercent,
+  });
+
+  factory CategoryValueBreakdownItem.fromJson(Map<String, dynamic> j) => CategoryValueBreakdownItem(
+        category: j['category'] as String,
+        productCount: (j['product_count'] as num).toInt(),
+        totalPurchaseValue: (j['total_purchase_value'] as num).toDouble(),
+        totalEstimatedResaleValue: (j['total_estimated_resale_value'] as num).toDouble(),
+        retentionPercent: (j['retention_percent'] as num).toDouble(),
+      );
+}
+
+class PortfolioAnalyticsItem {
+  final int totalProductsCount;
+  final int activeProductsCount;
+  final int soldProductsCount;
+  final int disposedProductsCount;
+  final double totalPurchaseValue;
+  final double totalEstimatedResaleValue;
+  final double totalRealizedFromSales;
+  final double totalNetCostOfOwnership;
+  final double averageValueRetentionPercent;
+  final List<CategoryValueBreakdownItem> categoriesBreakdown;
+
+  const PortfolioAnalyticsItem({
+    required this.totalProductsCount,
+    required this.activeProductsCount,
+    required this.soldProductsCount,
+    required this.disposedProductsCount,
+    required this.totalPurchaseValue,
+    required this.totalEstimatedResaleValue,
+    required this.totalRealizedFromSales,
+    required this.totalNetCostOfOwnership,
+    required this.averageValueRetentionPercent,
+    this.categoriesBreakdown = const [],
+  });
+
+  factory PortfolioAnalyticsItem.fromJson(Map<String, dynamic> j) => PortfolioAnalyticsItem(
+        totalProductsCount: (j['total_products_count'] as num).toInt(),
+        activeProductsCount: (j['active_products_count'] as num).toInt(),
+        soldProductsCount: (j['sold_products_count'] as num).toInt(),
+        disposedProductsCount: (j['disposed_products_count'] as num).toInt(),
+        totalPurchaseValue: (j['total_purchase_value'] as num).toDouble(),
+        totalEstimatedResaleValue: (j['total_estimated_resale_value'] as num).toDouble(),
+        totalRealizedFromSales: (j['total_realized_from_sales'] as num).toDouble(),
+        totalNetCostOfOwnership: (j['total_net_cost_of_ownership'] as num).toDouble(),
+        averageValueRetentionPercent: (j['average_value_retention_percent'] as num).toDouble(),
+        categoriesBreakdown: (j['categories_breakdown'] as List? ?? const [])
+            .map((c) => CategoryValueBreakdownItem.fromJson(c as Map<String, dynamic>))
+            .toList(),
       );
 }
