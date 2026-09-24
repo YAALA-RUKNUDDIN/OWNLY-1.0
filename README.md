@@ -16,6 +16,7 @@
 - **Cross-Platform Flutter Mobile Client:** State-of-the-art mobile experience built with Flutter 3.x, Riverpod state management, GoRouter declarative navigation, offline-tolerant HTTP client with automatic token refreshing, and responsive design adhering to the slate/emerald design system.
 - **Household & Family Sharing:** Multi-user shared vaults with role-based access control (`admin`, `member`, `viewer`), time-bound invite code generation (`OWN-XXXX-XXXX`), and safe unlinking cascades that preserve personal product vaults.
 - **Warranty Claim Assistant & Support Dossier:** End-to-end claim lifecycle management (`draft`, `submitted`, `in_review`, `approved`, `repaired`, `replaced`, `rejected`, `closed`) with one-click Claim Dossier packet compilation (product specs, serial numbers, active warranty verification, attached invoices with HMAC-signed download URLs, prior repair history, and printable Markdown). Integrates a curated manufacturer support directory (hotlines, warranty check portals, operating hours) for Apple, Samsung, Sony, Dell, HP, Lenovo, LG, Bose, Dyson, and more.
+- **Resale & Disposal Assistant:** Dynamic real-time secondary market valuation engine with category depreciation curves, physical condition assessments (`mint`, `excellent`, `good`, `fair`, `poor`), and true net cost of ownership & daily burn rates (`cost_per_day` over days owned). Includes one-click Marketplace Resale Listing Packet compilation (suggested pricing, quick-sale vs patient ranges, certified repair history, verified receipt proofs, and markdown/plaintext copy) and responsible exit lifecycle management (`sold`, `recycled`, `donated`).
 - **Honest Monetization:** Tiered subscription enforcement (Free tier capped at 10 items; Unlimited Premium) evaluated strictly server-side.
 - **Data Sovereignty & Privacy-First:** Full GDPR-grade data export (`GET /users/me/export`) and irreversible account deletion (`DELETE /users/me`) that cascades across all database records and storage files.
 
@@ -204,6 +205,12 @@ Base path: `/api/v1`. All endpoints return standard HTTP status codes and a unif
 | | `GET /products/{id}/claims` | List all warranty claims filed for specific product |
 | **Brands** | `GET /brands/{brand}/support` | Brand hotline, support portal, warranty lookup URL |
 | | `GET /brands/support/directory` | Directory of 17+ curated manufacturer support profiles |
+| **Resale** | `GET /products/{id}/valuation` | Dynamic valuation, retention %, and net cost of ownership |
+| | `PATCH /products/{id}/condition` | Update product condition (`mint`, `excellent`, `good`, `fair`, `poor`) |
+| | `GET /products/{id}/resale-packet` | Generate marketplace listing packet (pricing, specs, proofs, markdown) |
+| | `POST /products/{id}/sell` | Mark sold with realized price, platform, and realized net cost |
+| | `POST /products/{id}/dispose` | Log responsible exit (`recycled`, `donated`, `archived`) |
+| | `GET /portfolio/analytics` | Portfolio-wide purchase value, estimated resale value, and retention |
 | **Preferences** | `GET /users/me/prefs` | Get notification lead-time and category preferences |
 | | `PATCH /users/me/prefs` | Update notification preferences |
 | **Subscription** | `GET /subscription` | Current tier, usage count, and product limit |
@@ -229,12 +236,17 @@ Base path: `/api/v1`. All endpoints return standard HTTP status codes and a unif
 ### Test Suite Execution
 
 #### Backend Pytest Suite
-Run the full test suite (143 tests covering auth, security, user isolation, warranty math, today urgency, push notifications, cloud integrations, household sharing & RBAC, warranty claims & dossiers, and full end-to-end journey):
+Run the full test suite (153 tests covering auth, security, user isolation, warranty math, today urgency, push notifications, cloud integrations, household sharing & RBAC, warranty claims & dossiers, resale valuation & listing generator, and full end-to-end journey):
 
 ```bash
 cd backend
 # With virtual environment activated:
 pytest -v
+```
+
+#### Resale Valuation & Listing Generator Suite
+```bash
+pytest tests/test_resale.py -v
 ```
 
 #### Warranty Claims & Dossier Suite
@@ -258,7 +270,7 @@ pytest tests/test_cloud_integrations.py -v
 ```
 
 #### Flutter Mobile Test Suite
-Run component, state, and widget tests (30 tests passing, 0 analysis warnings):
+Run component, state, and widget tests (37 tests passing, 0 analysis warnings):
 
 ```bash
 cd mobile
@@ -287,9 +299,10 @@ python smoke_test.py http://localhost:8000/api/v1
 | **Document Vault** | Private storage + HMAC-signed expiring URLs | ✅ Complete | Path traversal & signature tampering verified in `test_e2e_journey.py` |
 | **OCR Pipeline** | Receipt extraction returning non-persisting draft | ✅ Complete | Verified in `test_e2e_journey.py` (saves nothing automatically) |
 | **Notifications** | Push dispatch + device lifecycle + deep linking | ✅ Complete | Verified in `test_push.py` and mobile `notification_test.dart` |
-| **Mobile App** | Riverpod + GoRouter + Responsive UI + Offline handling | ✅ Complete | 30 mobile tests green, 0 `flutter analyze` issues |
+| **Mobile App** | Riverpod + GoRouter + Responsive UI + Offline handling | ✅ Complete | 37 mobile tests green, 0 `flutter analyze` issues |
 | **Household Sharing** | Multi-user vaults, RBAC (admin/member/viewer), invite codes | ✅ Complete | 6 tests in `test_households.py`, 6 tests in `household_test.dart` |
 | **Warranty Claims** | Claim lifecycle, brand directory, one-click claim dossier | ✅ Complete | 11 tests in `test_claims.py`, 6 tests in `claim_test.dart` |
+| **Resale & Valuation** | Dynamic valuation, net cost of ownership, listing packet, responsible exit | ✅ Complete | 10 tests in `test_resale.py`, 7 tests in `resale_test.dart` |
 | **Containerization** | Docker Compose orchestration with healthchecks | ✅ Complete | Root `docker-compose.yml` validated with persistent volumes |
 | **Cloud Integrations** | AWS S3/R2, Google Vision OCR dual auth, FCM HTTP v1 | ✅ Complete | 18 integration tests passing in `test_cloud_integrations.py` |
-| **Documentation** | Production README + Architecture Decision Records | ✅ Complete | ADRs D-001 through D-014 recorded in `docs/decisions/` |
+| **Documentation** | Production README + Architecture Decision Records | ✅ Complete | ADRs D-001 through D-015 recorded in `docs/decisions/` |

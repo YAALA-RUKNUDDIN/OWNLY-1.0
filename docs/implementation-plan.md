@@ -105,9 +105,10 @@ endpoint, `/today` alias, analytics event sink, Sentry wiring.
 | 7 | Production cloud integrations: AWS S3 / Cloudflare R2, Google Cloud Vision OCR, Firebase FCM | ✅ done |
 | 8 | Household & family sharing: RBAC (admin/member/viewer), shared vaults, invite codes, mobile screen | ✅ done |
 | 9 | Warranty Claim Assistant & Brand Support: claim lifecycle (draft/review/approved), claim dossier packet generation (signed invoice URLs, product specs), curated manufacturer support directory, mobile claims screens & tabs | ✅ done |
+| 10 | Resale & Disposal Assistant: dynamic valuation engine, net cost of ownership & cost/day tracking, one-click marketplace resale listing packet, responsible exit (sold, recycled, donated), portfolio analytics screen & tabs | ✅ done |
 
 Every phase ends with: tests run → failures fixed → decision records → docs
-updated → git commit. (143 backend tests, 30 mobile tests passing, 0 analysis issues)
+updated → git commit. (153 backend tests, 37 mobile tests passing, 0 analysis issues)
 
 ## 6. Dependencies
 

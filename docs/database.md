@@ -42,7 +42,9 @@ service | custom. `lead_days` stores a JSON list of day-milestones, e.g.
 ### products
 Ownership record. Soft delete via `deleted_at` (indexed) — never hard-deleted
 without explicit account deletion. `status` enum: active | sold | lost |
-replaced | archived. `return_days` = 0 disables return tracking.
+replaced | archived | recycled | donated. `condition` enum: mint | excellent | good |
+fair | poor (default `good`). `resale_price` (numeric 12,2), `resale_date` (timestamptz),
+`resale_platform` (varchar 100), `resale_notes` (text). `return_days` = 0 disables return tracking.
 Indexes: `ix_products_user_status(user_id, status)`, `ix_products_category`,
 `user_id`, `deleted_at`.
 
