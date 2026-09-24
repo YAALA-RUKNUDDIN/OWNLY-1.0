@@ -10,7 +10,8 @@ PRODUCT_CATEGORIES = [
     "gaming", "other",
 ]
 
-ProductStatusLiteral = Literal["active", "sold", "lost", "replaced", "archived"]
+ProductStatusLiteral = Literal["active", "sold", "lost", "replaced", "archived", "recycled", "donated"]
+ProductConditionLiteral = Literal["mint", "excellent", "good", "fair", "poor"]
 
 
 class ProductCreate(BaseModel):
@@ -18,6 +19,7 @@ class ProductCreate(BaseModel):
     brand: str | None = Field(default=None, max_length=120)
     model_number: str | None = Field(default=None, max_length=120)
     category: str = Field(default="other")
+    condition: ProductConditionLiteral = "good"
     purchase_date: datetime
     purchase_price: float | None = Field(default=None, ge=0)
     currency: str = Field(default="USD", min_length=3, max_length=3)
@@ -30,6 +32,10 @@ class ProductCreate(BaseModel):
     payment_info: str | None = None
     return_days: int = Field(default=0, ge=0, le=3650)
     status: ProductStatusLiteral = "active"
+    resale_price: float | None = Field(default=None, ge=0)
+    resale_date: datetime | None = None
+    resale_platform: str | None = Field(default=None, max_length=100)
+    resale_notes: str | None = None
     notes: str | None = None
 
 
@@ -38,6 +44,7 @@ class ProductUpdate(BaseModel):
     brand: str | None = None
     model_number: str | None = None
     category: str | None = None
+    condition: ProductConditionLiteral | None = None
     purchase_date: datetime | None = None
     purchase_price: float | None = Field(default=None, ge=0)
     currency: str | None = None
@@ -50,6 +57,10 @@ class ProductUpdate(BaseModel):
     payment_info: str | None = None
     return_days: int | None = Field(default=None, ge=0, le=3650)
     status: ProductStatusLiteral | None = None
+    resale_price: float | None = Field(default=None, ge=0)
+    resale_date: datetime | None = None
+    resale_platform: str | None = None
+    resale_notes: str | None = None
     notes: str | None = None
 
 
@@ -74,6 +85,7 @@ class ProductOut(BaseModel):
     brand: str | None
     model_number: str | None
     category: str
+    condition: str = "good"
     purchase_date: datetime
     purchase_price: float | None
     currency: str
@@ -85,6 +97,10 @@ class ProductOut(BaseModel):
     custom_id: str | None
     return_days: int
     status: ProductStatusLiteral
+    resale_price: float | None = None
+    resale_date: datetime | None = None
+    resale_platform: str | None = None
+    resale_notes: str | None = None
     image_url: str | None
     notes: str | None
     created_at: datetime

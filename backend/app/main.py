@@ -10,7 +10,7 @@ from starlette.requests import Request
 
 from app.api import (
     admin, auth, claims, documents, files, households, notifications, ocr, products, repairs,
-    reminders, subscriptions, timeline, users, warranties,
+    reminders, resale, subscriptions, timeline, users, warranties,
 )
 from app.core.config import settings
 from app.core.errors import AppError, register_error_handlers
@@ -62,6 +62,7 @@ def create_app() -> FastAPI:
     app.include_router(subscriptions.router, prefix=api_prefix)
     app.include_router(notifications.router, prefix=api_prefix)
     app.include_router(claims.router, prefix=api_prefix)
+    app.include_router(resale.router, prefix=api_prefix)
 
     from app.api.dashboard import alias_router as today_alias_router
     from app.api.dashboard import router as dashboard_router

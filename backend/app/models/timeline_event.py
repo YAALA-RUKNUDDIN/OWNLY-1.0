@@ -12,6 +12,8 @@ class EventType(str, enum.Enum):
     product_added = "product_added"
     product_updated = "product_updated"
     product_sold = "product_sold"
+    product_recycled = "product_recycled"
+    product_donated = "product_donated"
     product_archived = "product_archived"
     invoice_uploaded = "invoice_uploaded"
     document_uploaded = "document_uploaded"

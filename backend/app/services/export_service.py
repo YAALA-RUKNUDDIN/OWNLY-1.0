@@ -72,6 +72,11 @@ def build_export(db: Session, user_id: uuid.UUID) -> dict:
                 "seller": p.seller,
                 "serial_number": p.serial_number,
                 "status": p.status.value if p.status else None,
+                "condition": p.condition,
+                "resale_price": float(p.resale_price) if p.resale_price is not None else None,
+                "resale_date": iso(p.resale_date),
+                "resale_platform": p.resale_platform,
+                "resale_notes": p.resale_notes,
                 "warranties": [
                     {"provider": w.provider, "type": w.warranty_type.value,
                      "start": iso(w.start_date), "end": iso(w.end_date)}

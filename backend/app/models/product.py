@@ -14,6 +14,16 @@ class ProductStatus(str, enum.Enum):
     lost = "lost"
     replaced = "replaced"
     archived = "archived"
+    recycled = "recycled"
+    donated = "donated"
+
+
+class ProductCondition(str, enum.Enum):
+    mint = "mint"
+    excellent = "excellent"
+    good = "good"
+    fair = "fair"
+    poor = "poor"
 
 
 class Product(Base):
@@ -33,6 +43,7 @@ class Product(Base):
     brand: Mapped[str | None] = mapped_column(String(120))
     model_number: Mapped[str | None] = mapped_column(String(120))
     category: Mapped[str] = mapped_column(String(60), nullable=False, default="other")
+    condition: Mapped[str] = mapped_column(String(30), default="good", nullable=False)
     purchase_date: Mapped[object] = mapped_column(DateTime(timezone=True), nullable=False)
     purchase_price: Mapped[float | None] = mapped_column(Numeric(12, 2))
     currency: Mapped[str] = mapped_column(String(3), default="USD")
@@ -47,9 +58,13 @@ class Product(Base):
     status: Mapped[ProductStatus] = mapped_column(
         Enum(ProductStatus, name="product_status"), default=ProductStatus.active, nullable=False
     )
+    resale_price: Mapped[float | None] = mapped_column(Numeric(12, 2))
+    resale_date: Mapped[object | None] = mapped_column(DateTime(timezone=True))
+    resale_platform: Mapped[str | None] = mapped_column(String(100))
+    resale_notes: Mapped[str | None] = mapped_column(Text)
     image_url: Mapped[str | None] = mapped_column(String(500))
     notes: Mapped[str | None] = mapped_column(Text)
-    deleted_at: Mapped[object] = mapped_column(DateTime(timezone=True), nullable=True, index=True)
+    deleted_at: Mapped[object | None] = mapped_column(DateTime(timezone=True), nullable=True, index=True)
     created_at: Mapped[object] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[object] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
