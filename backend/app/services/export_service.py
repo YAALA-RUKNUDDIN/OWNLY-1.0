@@ -22,6 +22,7 @@ def build_export(db: Session, user_id: uuid.UUID) -> dict:
                 joinedload(Product.service_records),
                 joinedload(Product.repairs),
                 joinedload(Product.timeline_events),
+                joinedload(Product.claims),
             )
             .where(Product.user_id == user_id)
         )
@@ -97,6 +98,12 @@ def build_export(db: Session, user_id: uuid.UUID) -> dict:
                 "timeline": [
                     {"type": e.event_type.value, "title": e.title, "date": iso(e.event_date)}
                     for e in p.timeline_events
+                ],
+                "claims": [
+                    {"title": c.title, "status": c.status.value, "claim_reference": c.claim_reference,
+                     "incident_date": iso(c.incident_date), "issue": c.issue_description,
+                     "cost_covered": float(c.claim_cost_covered) if c.claim_cost_covered else None}
+                    for c in p.claims
                 ],
             }
             for p in products

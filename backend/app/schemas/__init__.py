@@ -6,3 +6,4 @@ from app.schemas.reminder import *  # noqa
 from app.schemas.timeline import *  # noqa
 from app.schemas.dashboard import *  # noqa
 from app.schemas.user import *  # noqa
+from app.schemas.claim import *  # noqa

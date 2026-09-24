@@ -68,7 +68,7 @@ class HouseholdService:
         product_count = ProductRepository(self.db, user_id)._base_query(
             scope="household", household_id=household_id
         )
-        p_count = len(self.db.execute(product_count).scalars().all())
+        p_count = len(self.db.execute(product_count).unique().scalars().all())
 
         return HouseholdDetailOut(
             id=h.id,
