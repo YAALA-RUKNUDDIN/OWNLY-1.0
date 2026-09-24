@@ -104,9 +104,10 @@ endpoint, `/today` alias, analytics event sink, Sentry wiring.
 | 6 | Full-stack Docker, security review, E2E journey suite, README, deployment readiness | ✅ done |
 | 7 | Production cloud integrations: AWS S3 / Cloudflare R2, Google Cloud Vision OCR, Firebase FCM | ✅ done |
 | 8 | Household & family sharing: RBAC (admin/member/viewer), shared vaults, invite codes, mobile screen | ✅ done |
+| 9 | Warranty Claim Assistant & Brand Support: claim lifecycle (draft/review/approved), claim dossier packet generation (signed invoice URLs, product specs), curated manufacturer support directory, mobile claims screens & tabs | ✅ done |
 
 Every phase ends with: tests run → failures fixed → decision records → docs
-updated → git commit. (132 backend tests, 24 mobile tests passing, 0 analysis issues)
+updated → git commit. (143 backend tests, 30 mobile tests passing, 0 analysis issues)
 
 ## 6. Dependencies
 

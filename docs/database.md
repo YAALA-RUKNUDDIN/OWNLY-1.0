@@ -95,6 +95,32 @@ later); `provider_ref` holds the receipt/transaction id.
 degrades to free automatically and can never serve stale access.
 Index: `ix_subscriptions_user_id` (unique).
 
+### households
+Multi-user shared vaults for family or co-habitants.
+`id` (UUID PK), `name` (varchar(120)), `created_by_user_id` (UUID FK -> users.id CASCADE).
+Relationships: `creator` (User), `members` (HouseholdMember, cascade delete-orphan),
+`invites` (HouseholdInvite, cascade delete-orphan), `products` (Product).
+
+### household_members
+Membership join table with RBAC.
+`role` enum: admin | member | viewer.
+Unique constraint: `(household_id, user_id)`. Index: `ix_household_members_user`.
+
+### household_invites
+Time-bound 12-character invite codes (`OWN-XXXX-XXXX`).
+`code` (varchar(32), unique, indexed), `role` (HouseholdRole), `expires_at` (timestamptz),
+`max_uses` (int), `uses_count` (int).
+
+### warranty_claims
+Full lifecycle tracking of manufacturer and third-party warranty claims.
+`product_id` (UUID FK -> products.id CASCADE), `warranty_id` (UUID FK -> warranties.id SET NULL),
+`user_id` (UUID FK -> users.id CASCADE).
+`claim_reference` (varchar(100), e.g. RMA or manufacturer case ID), `title` (varchar(200)),
+`issue_description` (text), `incident_date` (timestamptz, future dates rejected),
+`status` enum: draft | submitted | in_review | approved | repaired | replaced | rejected | closed (default draft).
+`resolution_notes` (text), `claim_cost_covered` (numeric(12,2)), `contact_email`, `contact_phone`.
+Indexes: `ix_warranty_claims_product_id`, `ix_warranty_claims_user_id`, `ix_warranty_claims_status`.
+
 ---
 
 ## Relationships (cascades)
@@ -105,11 +131,17 @@ users 1─┬─N products 1─┬─N warranties        (CASCADE)
         │              ├─N reminders         (CASCADE)
         │              ├─N service_records   (CASCADE)
         │              ├─N repairs           (CASCADE)
-        │              └─N timeline_events   (CASCADE)
+        │              ├─N timeline_events   (CASCADE)
+        │              └─N warranty_claims   (CASCADE)
         ├─N refresh_tokens                 (CASCADE)
         ├─N device_tokens                  (CASCADE)
         ├─N notification_preferences       (CASCADE)
-        └─1 subscriptions                  (CASCADE)
+        ├─1 subscriptions                  (CASCADE)
+        ├─N household_members              (CASCADE)
+        └─N warranty_claims                (CASCADE)
+households 1─┬─N household_members         (CASCADE)
+             ├─N household_invites         (CASCADE)
+             └─N products                  (SET NULL on delete — safe personal unlinking)
 documents.user_id → users.id                (CASCADE)
 ```
 
