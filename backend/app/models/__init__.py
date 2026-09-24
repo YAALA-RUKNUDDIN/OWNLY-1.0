@@ -14,6 +14,7 @@ from app.models.household import (
 )
 from app.models.timeline_event import TimelineEvent, EventType
 from app.models.notification_log import NotificationLog
+from app.models.claim import WarrantyClaim, ClaimStatus
 
 __all__ = [
     "User", "RefreshToken", "DeviceToken", "NotificationCategory", "NotificationPreference",
@@ -25,4 +26,5 @@ __all__ = [
     "Reminder", "ReminderStatus", "ReminderType",
     "ServiceRecord", "Repair", "TimelineEvent", "EventType",
     "NotificationLog",
+    "WarrantyClaim", "ClaimStatus",
 ]

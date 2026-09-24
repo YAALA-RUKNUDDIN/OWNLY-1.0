@@ -24,6 +24,9 @@ class EventType(str, enum.Enum):
     repair_recorded = "repair_recorded"
     reminder_created = "reminder_created"
     reminder_completed = "reminder_completed"
+    claim_filed = "claim_filed"
+    claim_updated = "claim_updated"
+    claim_resolved = "claim_resolved"
 
 
 class TimelineEvent(Base):

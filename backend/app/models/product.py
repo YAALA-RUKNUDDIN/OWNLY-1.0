@@ -61,3 +61,4 @@ class Product(Base):
     service_records: Mapped[list["ServiceRecord"]] = relationship(back_populates="product", cascade="all, delete-orphan")
     repairs: Mapped[list["Repair"]] = relationship(back_populates="product", cascade="all, delete-orphan")
     timeline_events: Mapped[list["TimelineEvent"]] = relationship(back_populates="product", cascade="all, delete-orphan")
+    claims: Mapped[list["WarrantyClaim"]] = relationship(back_populates="product", cascade="all, delete-orphan")
