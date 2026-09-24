@@ -111,6 +111,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 onTap: () => context.push(OwnlyRoutes.households),
               ),
               ListTile(
+                leading: const Icon(Icons.shield_outlined, color: OwnlyTheme.seed),
+                title: const Text('Warranty claims'),
+                subtitle: const Text('Status tracking, dossiers & brand support'),
+                onTap: () => context.push(OwnlyRoutes.claims),
+              ),
+              ListTile(
                 leading: const Icon(Icons.workspace_premium_outlined,
                     color: OwnlyTheme.seed),
                 title: const Text('Subscription'),

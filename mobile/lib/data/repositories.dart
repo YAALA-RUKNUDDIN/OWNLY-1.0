@@ -489,3 +489,150 @@ class HouseholdRepository {
 final householdRepositoryProvider = Provider<HouseholdRepository>(
   (ref) => HouseholdRepository(ref.watch(apiClientProvider)),
 );
+
+/// Claim repository handling warranty claims, dossiers, and brand support.
+class ClaimRepository {
+  final ApiClient api;
+  ClaimRepository(this.api);
+
+  Future<List<WarrantyClaimItem>> listClaims({String? status, int limit = 50, int offset = 0}) async {
+    try {
+      final resp = await api.dio.get(
+        '/claims',
+        queryParameters: {
+          if (status != null) 'status': status,
+          'limit': limit,
+          'offset': offset,
+        },
+      );
+      final items = ((resp.data['items'] ?? const <dynamic>[]) as List).cast<Map<String, dynamic>>();
+      return items.map(WarrantyClaimItem.fromJson).toList();
+    } on DioException catch (e) {
+      throw ApiClient.toError(e);
+    }
+  }
+
+  Future<List<WarrantyClaimItem>> listProductClaims(String productId) async {
+    try {
+      final resp = await api.dio.get('/products/$productId/claims');
+      final items = (resp.data as List).cast<Map<String, dynamic>>();
+      return items.map(WarrantyClaimItem.fromJson).toList();
+    } on DioException catch (e) {
+      throw ApiClient.toError(e);
+    }
+  }
+
+  Future<WarrantyClaimItem> getClaim(String claimId) async {
+    try {
+      final resp = await api.dio.get('/claims/$claimId');
+      return WarrantyClaimItem.fromJson(resp.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      throw ApiClient.toError(e);
+    }
+  }
+
+  Future<WarrantyClaimItem> createClaim(
+    String productId, {
+    required String title,
+    required String issueDescription,
+    required DateTime incidentDate,
+    String? warrantyId,
+    String? claimReference,
+    String? contactEmail,
+    String? contactPhone,
+  }) async {
+    try {
+      final resp = await api.dio.post(
+        '/products/$productId/claims',
+        data: {
+          'title': title,
+          'issue_description': issueDescription,
+          'incident_date': incidentDate.toIso8601String(),
+          if (warrantyId != null) 'warranty_id': warrantyId,
+          if (claimReference != null && claimReference.isNotEmpty) 'claim_reference': claimReference,
+          if (contactEmail != null && contactEmail.isNotEmpty) 'contact_email': contactEmail,
+          if (contactPhone != null && contactPhone.isNotEmpty) 'contact_phone': contactPhone,
+        },
+      );
+      return WarrantyClaimItem.fromJson(resp.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      throw ApiClient.toError(e);
+    }
+  }
+
+  Future<WarrantyClaimItem> updateClaim(
+    String claimId, {
+    String? title,
+    String? issueDescription,
+    String? status,
+    String? claimReference,
+    DateTime? incidentDate,
+    String? resolutionNotes,
+    double? claimCostCovered,
+    String? contactEmail,
+    String? contactPhone,
+  }) async {
+    try {
+      final data = <String, dynamic>{};
+      if (title != null) data['title'] = title;
+      if (issueDescription != null) data['issue_description'] = issueDescription;
+      if (status != null) data['status'] = status;
+      if (claimReference != null) data['claim_reference'] = claimReference;
+      if (incidentDate != null) data['incident_date'] = incidentDate.toIso8601String();
+      if (resolutionNotes != null) data['resolution_notes'] = resolutionNotes;
+      if (claimCostCovered != null) data['claim_cost_covered'] = claimCostCovered;
+      if (contactEmail != null) data['contact_email'] = contactEmail;
+      if (contactPhone != null) data['contact_phone'] = contactPhone;
+
+      final resp = await api.dio.patch('/claims/$claimId', data: data);
+      return WarrantyClaimItem.fromJson(resp.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      throw ApiClient.toError(e);
+    }
+  }
+
+  Future<void> deleteClaim(String claimId) async {
+    try {
+      await api.dio.delete('/claims/$claimId');
+    } on DioException catch (e) {
+      throw ApiClient.toError(e);
+    }
+  }
+
+  Future<ClaimDossierItem> getClaimDossier(String claimId) async {
+    try {
+      final resp = await api.dio.get('/claims/$claimId/dossier');
+      return ClaimDossierItem.fromJson(resp.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      throw ApiClient.toError(e);
+    }
+  }
+
+  Future<List<BrandSupportItem>> listBrandDirectory({String? category}) async {
+    try {
+      final resp = await api.dio.get(
+        '/claims/support-directory',
+        queryParameters: {
+          if (category != null) 'category': category,
+        },
+      );
+      final items = (resp.data as List).cast<Map<String, dynamic>>();
+      return items.map(BrandSupportItem.fromJson).toList();
+    } on DioException catch (e) {
+      throw ApiClient.toError(e);
+    }
+  }
+
+  Future<BrandSupportItem> getBrandSupport(String brand) async {
+    try {
+      final resp = await api.dio.get('/claims/support-directory/$brand');
+      return BrandSupportItem.fromJson(resp.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      throw ApiClient.toError(e);
+    }
+  }
+}
+
+final claimRepositoryProvider = Provider<ClaimRepository>(
+  (ref) => ClaimRepository(ref.watch(apiClientProvider)),
+);

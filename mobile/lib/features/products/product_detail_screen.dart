@@ -9,6 +9,7 @@ import 'package:ownly/data/models.dart';
 import 'package:ownly/data/repositories.dart';
 import 'package:ownly/features/products/products_controller.dart';
 import 'package:ownly/features/products/repairs_tab.dart';
+import 'package:ownly/features/products/claims_tab.dart';
 
 /// Product detail: overview, timeline, documents, warranty, repairs sections.
 class ProductDetailScreen extends ConsumerStatefulWidget {
@@ -47,7 +48,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
           : state.error != null
               ? Center(child: Text(state.error!))
               : DefaultTabController(
-                  length: 4,
+                  length: 5,
                   child: Column(
                     children: [
                       // Header
@@ -103,8 +104,11 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                       const TabBar(
                         labelColor: OwnlyTheme.seed,
                         indicatorColor: OwnlyTheme.seed,
+                        isScrollable: true,
+                        tabAlignment: TabAlignment.start,
                         tabs: [
                           Tab(text: 'Overview'),
+                          Tab(text: 'Claims'),
                           Tab(text: 'Timeline'),
                           Tab(text: 'Documents'),
                           Tab(text: 'Repairs'),
@@ -113,6 +117,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                       Expanded(
                         child: TabBarView(children: [
                           _OverviewTab(state: state),
+                          ClaimsTab(product: p),
                           _TimelineTab(events: state.timeline),
                           _DocumentsTab(productId: widget.productId, documents: state.documents),
                           RepairsTab(productId: widget.productId, currency: p.currency),
