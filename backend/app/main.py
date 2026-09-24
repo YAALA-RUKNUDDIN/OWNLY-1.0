@@ -9,7 +9,7 @@ from slowapi.util import get_remote_address
 from starlette.requests import Request
 
 from app.api import (
-    admin, auth, documents, files, households, notifications, ocr, products, repairs,
+    admin, auth, claims, documents, files, households, notifications, ocr, products, repairs,
     reminders, subscriptions, timeline, users, warranties,
 )
 from app.core.config import settings
@@ -61,6 +61,7 @@ def create_app() -> FastAPI:
     app.include_router(admin.router, prefix=api_prefix)
     app.include_router(subscriptions.router, prefix=api_prefix)
     app.include_router(notifications.router, prefix=api_prefix)
+    app.include_router(claims.router, prefix=api_prefix)
 
     from app.api.dashboard import alias_router as today_alias_router
     from app.api.dashboard import router as dashboard_router
